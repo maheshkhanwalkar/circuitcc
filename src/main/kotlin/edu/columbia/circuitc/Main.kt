@@ -1,10 +1,13 @@
 package edu.columbia.circuitc
 
+import edu.columbia.circuitc.lexer.Lexer
 import java.io.File
 
 fun main(args: Array<String>) {
     val content = readInputFile(args)
-    // TODO lexically analyze
+
+    val lexer = Lexer()
+    val tokens = lexer.tokenize(content)
 }
 
 private fun readInputFile(args: Array<String>): String {
