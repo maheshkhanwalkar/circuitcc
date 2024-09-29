@@ -60,11 +60,14 @@ class DFA(regex: String, private val acceptor: TokenAcceptor) {
      * If the DFA is in an accept state, generate a token.
      */
     fun accept(start: TokenPos, end: TokenPos): Token {
-        if (isAccept()) {
-            return acceptor.accept(seenText.toString(), start, end)
-        } else {
+        if (!isAccept()) {
             throw IllegalStateException("State $state is not an accept state")
         }
+
+        val token = acceptor.accept(seenText.toString(), start, end)
+        reset()
+
+        return token
     }
 
     /**
