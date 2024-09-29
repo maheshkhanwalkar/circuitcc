@@ -5,10 +5,13 @@ package edu.columbia.circuitc.lexer
  */
 class Lexer {
     private val stateMachines: List<DFA> = listOf(
-        DFA("and") { text, start, end -> Token(TokenType.AND, text, start, end) },
-        DFA("or")  { text, start, end -> Token(TokenType.OR, text, start, end)  },
-        DFA("not") { text, start, end -> Token(TokenType.NOT, text, start, end) },
-        DFA("xor") { text, start, end -> Token(TokenType.XOR, text, start, end) },
+        DFA("and")  { text, start, end -> Token(TokenType.AND, text, start, end) },
+        DFA("or")   { text, start, end -> Token(TokenType.OR, text, start, end)  },
+        DFA("not")  { text, start, end -> Token(TokenType.NOT, text, start, end) },
+        DFA("xor")  { text, start, end -> Token(TokenType.XOR, text, start, end) },
+        DFA("in")   { text, start, end -> Token(TokenType.IN, text, start, end)  },
+        DFA("out")  { text, start, end -> Token(TokenType.OUT, text, start, end) },
+        DFA("bits") { text, start, end -> Token(TokenType.BITS, text, start, end) },
     )
 
     fun tokenize(text: String): List<Token> {

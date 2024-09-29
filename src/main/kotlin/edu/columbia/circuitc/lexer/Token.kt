@@ -4,9 +4,9 @@ package edu.columbia.circuitc.lexer
  * Type of lexical token.
  */
 enum class TokenType {
-    IDENTIFIER,
     AND, OR, NOT, XOR,
-    INT
+    IN, OUT, BITS,
+    IDENTIFIER, INT
 }
 
 /**
