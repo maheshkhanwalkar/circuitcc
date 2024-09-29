@@ -18,8 +18,11 @@ class Lexer {
         DFA("<") { text, start, end -> Token(TokenType.LEFT_ANGLE, text, start, end) },
         DFA(">") { text, start, end -> Token(TokenType.RIGHT_ANGLE, text, start, end) },
         DFA("=") { text, start, end -> Token(TokenType.EQUALS, text, start, end) },
-        DFA("{") { text, start, end -> Token(TokenType.LEFT_PAREN, text, start, end) },
-        DFA("}") { text, start, end -> Token(TokenType.RIGHT_PAREN, text, start, end) },
+        DFA("{") { text, start, end -> Token(TokenType.LEFT_BRACE, text, start, end) },
+        DFA("}") { text, start, end -> Token(TokenType.RIGHT_BRACE, text, start, end) },
+        DFA("(") { text, start, end -> Token(TokenType.LEFT_PAREN, text, start, end) },
+        DFA(")") { text, start, end -> Token(TokenType.RIGHT_PAREN, text, start, end) },
+        DFA(";") { text, start, end -> Token(TokenType.SEMICOLON, text, start, end) },
 
         // Identifiers/Numbers [TODO]
         // DFA("[a-z]+")      { text, start, end -> Token(TokenType.IDENTIFIER, text, start, end) },
