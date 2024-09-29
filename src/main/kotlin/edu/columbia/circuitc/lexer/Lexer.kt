@@ -35,7 +35,12 @@ class Lexer {
             }
 
             if (found) {
-                stateMachines.forEach { it.reset() }
+                // We still need to consume the current character
+                stateMachines.forEach {
+                    it.reset()
+                    it.consume(c)
+                }
+
                 start = TokenPos(lineNo, columnNo)
             }
 

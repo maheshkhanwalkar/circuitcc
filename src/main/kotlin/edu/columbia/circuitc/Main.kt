@@ -8,6 +8,8 @@ fun main(args: Array<String>) {
 
     val lexer = Lexer()
     val tokens = lexer.tokenize(content)
+
+    println(tokens)
 }
 
 private fun readInputFile(args: Array<String>): String {
