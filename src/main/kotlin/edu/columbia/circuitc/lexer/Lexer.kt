@@ -1,6 +1,16 @@
 package edu.columbia.circuitc.lexer
 
-class Lexer(private val stateMachines: List<DFA>) {
+/**
+ * Lexer with constituent DFA rules ranked in order of highest (first) to lowest (last) priority.
+ */
+class Lexer {
+    private val stateMachines: List<DFA> = listOf(
+        DFA("and") { text, start, end -> Token(TokenType.AND, text, start, end) },
+        DFA("or")  { text, start, end -> Token(TokenType.OR, text, start, end)  },
+        DFA("not") { text, start, end -> Token(TokenType.NOT, text, start, end) },
+        DFA("xor") { text, start, end -> Token(TokenType.XOR, text, start, end) },
+    )
+
     fun tokenize(text: String): List<Token> {
         var lineNo = 1
         var columnNo = 1

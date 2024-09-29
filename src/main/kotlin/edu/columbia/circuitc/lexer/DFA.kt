@@ -79,6 +79,16 @@ class DFA(regex: String, private val acceptor: TokenAcceptor) {
     }
 
     private fun buildTransitionMap(regex: String): Pair<Map<Int, Map<Char, Int>>, Set<Int>> {
-        TODO("build transition map")
+        var currState = 0
+        val map = mutableMapOf<Int, Map<Char, Int>>()
+
+        for (c in regex) {
+            // TODO handle star and alternation syntax
+            val nextState = currState + 1
+            map[currState] = mapOf(Pair(c, nextState))
+            currState = nextState
+        }
+
+        return Pair(map, setOf(currState))
     }
 }
