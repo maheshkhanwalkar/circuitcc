@@ -18,3 +18,10 @@ data class TokenPos(val row: Int, val col: Int)
  * Lexical token.
  */
 data class Token(val type: TokenType, val payload: String, val start: TokenPos, val end: TokenPos)
+
+/**
+ * Build a token from the given text.
+ */
+interface TokenAcceptor {
+    fun accept(text: String, start: TokenPos, end: TokenPos): Token
+}
