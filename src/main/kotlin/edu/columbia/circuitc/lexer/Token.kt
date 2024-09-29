@@ -6,6 +6,7 @@ package edu.columbia.circuitc.lexer
 enum class TokenType {
     AND, OR, NOT, XOR,
     IN, OUT, BITS,
+    LEFT_ANGLE, RIGHT_ANGLE, EQUALS, LEFT_PAREN, RIGHT_PAREN,
     IDENTIFIER, INT
 }
 
