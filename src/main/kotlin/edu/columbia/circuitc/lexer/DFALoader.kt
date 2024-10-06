@@ -1,0 +1,41 @@
+package edu.columbia.circuitc.lexer
+
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.KotlinModule
+
+object DFALoader {
+    private val mapper = ObjectMapper().registerModule(KotlinModule.Builder().build())
+    private val dfaMap: Map<String, DFAJson> = loadDFAs()
+
+    private fun loadDFAs(): Map<String, DFAJson> {
+        val stream = this::class.java.getResourceAsStream("/lexer/tokens.json")
+        val graphMapRaw = mapper.readValue(stream, Map::class.java)
+
+        return graphMapRaw.map {
+            it.key as String to mapper.convertValue(it.value, DFAJson::class.java)
+        }.toMap()
+    }
+
+    private fun expandShortHand(graph: Map<Int, Map<String, Int>>): Map<Int, Map<Char, Int>> {
+        return graph.map {
+            val transformed = it.value.flatMap { transition ->
+                if (transition.key.length > 1) {
+                   val keys = (transition.key[0]..transition.key[2]).toSet()
+                   keys.map { key -> key to transition.value }
+                } else {
+                    listOf(transition.key.get(0) to transition.value)
+                }
+            }.toMap()
+
+            it.key to transformed
+        }.toMap()
+    }
+
+    fun get(name: String, acceptor: TokenAcceptor): DFA {
+        val rawDFA = dfaMap[name]!!
+        val expanded = expandShortHand(rawDFA.graph)
+        return DFA(expanded, rawDFA.start, rawDFA.accept, acceptor)
+    }
+}
+
+private data class DFAJson(var start: Int, var accept: Set<Int>, var graph: Map<Int, Map<String, Int>>)

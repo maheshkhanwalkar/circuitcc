@@ -6,27 +6,27 @@ package edu.columbia.circuitc.lexer
 class Lexer {
     private val stateMachines: List<DFA> = listOf(
         // Keywords
-        DFA("and")  { text, start, end -> Token(TokenType.AND, text, start, end) },
-        DFA("or")   { text, start, end -> Token(TokenType.OR, text, start, end)  },
-        DFA("not")  { text, start, end -> Token(TokenType.NOT, text, start, end) },
-        DFA("xor")  { text, start, end -> Token(TokenType.XOR, text, start, end) },
-        DFA("in")   { text, start, end -> Token(TokenType.IN, text, start, end)  },
-        DFA("out")  { text, start, end -> Token(TokenType.OUT, text, start, end) },
-        DFA("bits") { text, start, end -> Token(TokenType.BITS, text, start, end) },
+        DFALoader.get("and")  { text, start, end -> Token(TokenType.AND, text, start, end) },
+        DFALoader.get("or")   { text, start, end -> Token(TokenType.OR, text, start, end)  },
+        DFALoader.get("not")  { text, start, end -> Token(TokenType.NOT, text, start, end) },
+        DFALoader.get("xor")  { text, start, end -> Token(TokenType.XOR, text, start, end) },
+        DFALoader.get("in")   { text, start, end -> Token(TokenType.IN, text, start, end)  },
+        DFALoader.get("out")  { text, start, end -> Token(TokenType.OUT, text, start, end) },
+        DFALoader.get("bits") { text, start, end -> Token(TokenType.BITS, text, start, end) },
 
         // Symbols
-        DFA("<") { text, start, end -> Token(TokenType.LEFT_ANGLE, text, start, end) },
-        DFA(">") { text, start, end -> Token(TokenType.RIGHT_ANGLE, text, start, end) },
-        DFA("=") { text, start, end -> Token(TokenType.EQUALS, text, start, end) },
-        DFA("{") { text, start, end -> Token(TokenType.LEFT_BRACE, text, start, end) },
-        DFA("}") { text, start, end -> Token(TokenType.RIGHT_BRACE, text, start, end) },
-        DFA("(") { text, start, end -> Token(TokenType.LEFT_PAREN, text, start, end) },
-        DFA(")") { text, start, end -> Token(TokenType.RIGHT_PAREN, text, start, end) },
-        DFA(";") { text, start, end -> Token(TokenType.SEMICOLON, text, start, end) },
+        DFALoader.get("<") { text, start, end -> Token(TokenType.LEFT_ANGLE, text, start, end) },
+        DFALoader.get(">") { text, start, end -> Token(TokenType.RIGHT_ANGLE, text, start, end) },
+        DFALoader.get("=") { text, start, end -> Token(TokenType.EQUALS, text, start, end) },
+        DFALoader.get("{") { text, start, end -> Token(TokenType.LEFT_BRACE, text, start, end) },
+        DFALoader.get("}") { text, start, end -> Token(TokenType.RIGHT_BRACE, text, start, end) },
+        DFALoader.get("(") { text, start, end -> Token(TokenType.LEFT_PAREN, text, start, end) },
+        DFALoader.get(")") { text, start, end -> Token(TokenType.RIGHT_PAREN, text, start, end) },
+        DFALoader.get(";") { text, start, end -> Token(TokenType.SEMICOLON, text, start, end) },
 
-        // Identifiers/Numbers [TODO]
-        // DFA("[a-z]+")      { text, start, end -> Token(TokenType.IDENTIFIER, text, start, end) },
-        // DFA("[1-9][0-9]*") { text, start, end -> Token(TokenType.INT, text, start, end) }
+        // Identifiers/Numbers
+        DFALoader.get("id")      { text, start, end -> Token(TokenType.IDENTIFIER, text, start, end) },
+        DFALoader.get("num") { text, start, end -> Token(TokenType.INT, text, start, end) }
     )
 
     fun tokenize(text: String): List<Token> {
