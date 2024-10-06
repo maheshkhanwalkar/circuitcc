@@ -16,6 +16,10 @@ object DFALoader {
         }.toMap()
     }
 
+    /**
+     * Expand any string shorthands (e.g. "0-9" -> 0, 1, 2, 3, 4, 5, 6, 7, 8, 9) and construct
+     * a graph with the expanded character edges.
+     */
     private fun expandShortHand(graph: Map<Int, Map<String, Int>>): Map<Int, Map<Char, Int>> {
         return graph.map {
             val transformed = it.value.flatMap { transition ->
@@ -38,4 +42,7 @@ object DFALoader {
     }
 }
 
+/**
+ * JSON data object representing a DFA.
+ */
 private data class DFAJson(var start: Int, var accept: Set<Int>, var graph: Map<Int, Map<String, Int>>)
