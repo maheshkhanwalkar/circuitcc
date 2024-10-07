@@ -35,6 +35,9 @@ object DFALoader {
         }.toMap()
     }
 
+    /**
+     * Get the DFA by name with the provided acceptor function.
+     */
     fun get(name: String, acceptor: TokenAcceptor): DFA {
         val rawDFA = dfaMap[name]!!
         val expanded = expandShortHand(rawDFA.graph)
