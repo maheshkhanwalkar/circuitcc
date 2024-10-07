@@ -24,10 +24,30 @@ object DFALoader {
         return graph.map {
             val transformed = it.value.flatMap { transition ->
                 if (transition.key.length > 1) {
-                   val keys = (transition.key[0]..transition.key[2]).toSet()
-                   keys.map { key -> key to transition.value }
+                    val keys = if (transition.key.contains('-')) {
+                        (transition.key[0]..transition.key[2]).toSet()
+                    } else {
+                        // Handle explicit single-char alternation
+                        val options = transition.key.split("|")
+                        options.map { item ->
+                            if (item.length == 1) {
+                                item[0]
+                            } else {
+                                when (item[1]) {
+                                    't' -> '\t'
+                                    'n' -> '\n'
+                                    'r' -> '\r'
+                                    else -> {
+                                        throw IllegalArgumentException("Illegal character $item")
+                                    }
+                                }
+                            }
+                        }.toSet()
+                    }
+
+                    keys.map { key -> key to transition.value }
                 } else {
-                    listOf(transition.key.get(0) to transition.value)
+                    listOf(transition.key[0] to transition.value)
                 }
             }.toMap()
 
