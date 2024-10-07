@@ -13,6 +13,8 @@ class Lexer {
         DFALoader.get("in")   { text, start, end -> Token(TokenType.IN, text, start, end)  },
         DFALoader.get("out")  { text, start, end -> Token(TokenType.OUT, text, start, end) },
         DFALoader.get("bits") { text, start, end -> Token(TokenType.BITS, text, start, end) },
+        DFALoader.get("clock") { text, start, end -> Token(TokenType.CLOCK, text, start, end) },
+        DFALoader.get("register") { text, start, end -> Token(TokenType.REGISTER, text, start, end) },
 
         // Symbols
         DFALoader.get("<") { text, start, end -> Token(TokenType.LEFT_ANGLE, text, start, end) },

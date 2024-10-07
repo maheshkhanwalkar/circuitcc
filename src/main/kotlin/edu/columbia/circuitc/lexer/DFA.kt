@@ -1,10 +1,7 @@
 package edu.columbia.circuitc.lexer
 
 /**
- * Build a DFA from the given regex with a token acceptor.
- *
- * Caveat: this class does not support all kinds of regular expressions. It does not support alternation
- * and most regex syntax sugar.
+ * Build a DFA from the given directed graph.
  */
 class DFA(private val transitionMap: Map<Int, Map<Char, Int>>,
           private val startState: Int, private val acceptStates: Set<Int>, private val acceptor: TokenAcceptor) {
