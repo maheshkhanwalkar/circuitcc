@@ -25,6 +25,7 @@ class Lexer {
         DFALoader.get("(") { text, start, end -> Token(TokenType.LEFT_PAREN, text, start, end) },
         DFALoader.get(")") { text, start, end -> Token(TokenType.RIGHT_PAREN, text, start, end) },
         DFALoader.get(";") { text, start, end -> Token(TokenType.SEMICOLON, text, start, end) },
+        DFALoader.get(",") { text, start, end -> Token(TokenType.COMMA, text, start, end) },
 
         // Identifiers/Numbers
         DFALoader.get("id")      { text, start, end -> Token(TokenType.IDENTIFIER, text, start, end) },
@@ -45,6 +46,8 @@ class Lexer {
             var found = false
 
             // FIXME: there's a bug on maximal tokenization
+            // FIXME: there's also a bug with (lineNo, columnNo) positioning
+            // TODO: reject invalid tokens
             for (machine in stateMachines) {
                 if (!machine.isAccept() || machine.peek(c)) {
                     machine.consume(c)
