@@ -7,8 +7,9 @@ package edu.columbia.circuitc.lexer
  * and most regex syntax sugar.
  */
 class DFA(private val transitionMap: Map<Int, Map<Char, Int>>,
-          private var state: Int, private val acceptStates: Set<Int>, private val acceptor: TokenAcceptor) {
+          private val startState: Int, private val acceptStates: Set<Int>, private val acceptor: TokenAcceptor) {
 
+    private var state = startState
     private val seenText = StringBuilder()
 
     /**
@@ -68,6 +69,6 @@ class DFA(private val transitionMap: Map<Int, Map<Char, Int>>,
      */
     fun reset() {
         seenText.clear()
-        state = 0
+        state = startState
     }
 }

@@ -26,7 +26,10 @@ class Lexer {
 
         // Identifiers/Numbers
         DFALoader.get("id")      { text, start, end -> Token(TokenType.IDENTIFIER, text, start, end) },
-        DFALoader.get("num") { text, start, end -> Token(TokenType.INT, text, start, end) }
+        DFALoader.get("num") { text, start, end -> Token(TokenType.INT, text, start, end) },
+
+        // Whitespace
+        DFALoader.get("whitespace") { text, start, end -> Token(TokenType.IGNORED, text, start, end) },
     )
 
     fun tokenize(text: String): List<Token> {
@@ -39,6 +42,7 @@ class Lexer {
         for (c in text.toCharArray()) {
             var found = false
 
+            // FIXME: there's a bug on maximal tokenization
             for (machine in stateMachines) {
                 if (!machine.isAccept() || machine.peek(c)) {
                     machine.consume(c)
@@ -80,6 +84,12 @@ class Lexer {
         }
 
         stateMachines.forEach { it.reset() }
-        return tokens
+        return filterIgnored(tokens)
+    }
+
+    private fun filterIgnored(tokens: List<Token>): List<Token> {
+        return tokens.filter {
+            it.type != TokenType.IGNORED
+        }
     }
 }
