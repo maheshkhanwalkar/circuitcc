@@ -61,7 +61,7 @@ object DFALoader {
     fun get(name: String, acceptor: TokenAcceptor): DFA {
         val rawDFA = dfaMap[name]!!
         val expanded = expandShortHand(rawDFA.graph)
-        return DFA(expanded, rawDFA.start, rawDFA.accept, acceptor)
+        return DFA(name, expanded, rawDFA.start, rawDFA.accept, acceptor)
     }
 }
 

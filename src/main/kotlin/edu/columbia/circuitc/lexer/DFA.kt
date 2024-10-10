@@ -3,7 +3,7 @@ package edu.columbia.circuitc.lexer
 /**
  * Build a DFA from the given directed graph.
  */
-class DFA(private val transitionMap: Map<Int, Map<Char, Int>>,
+class DFA(private val name: String, private val transitionMap: Map<Int, Map<Char, Int>>,
           private val startState: Int, private val acceptStates: Set<Int>, private val acceptor: TokenAcceptor) {
 
     private var state = startState

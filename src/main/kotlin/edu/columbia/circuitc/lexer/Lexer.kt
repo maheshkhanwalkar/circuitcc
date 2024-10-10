@@ -42,33 +42,21 @@ class Lexer {
         val tokens = mutableListOf<Token>()
         var start = TokenPos(lineNo, columnNo)
 
-        for (c in text.toCharArray()) {
-            var found = false
+        for ((i, c) in text.toCharArray().withIndex()) {
+            var valid = false
+            val acceptable = mutableListOf<DFA>()
 
-            // FIXME: there's a bug on maximal tokenization
-            // FIXME: there's also a bug with (lineNo, columnNo) positioning
-            // TODO: reject invalid tokens
             for (machine in stateMachines) {
-                if (!machine.isAccept() || machine.peek(c)) {
-                    machine.consume(c)
-                    continue
-                }
+                val res = machine.consume(c)
+                valid = valid || res
 
-                // State machine is in an accept state and cannot maximal munch
-                val token = machine.accept(start, TokenPos(lineNo, columnNo))
-                tokens.add(token)
-                found = true
-                break
+                if (machine.isAccept()) {
+                    acceptable.add(machine)
+                }
             }
 
-            if (found) {
-                // We still need to consume the current character
-                stateMachines.forEach {
-                    it.reset()
-                    it.consume(c)
-                }
-
-                start = TokenPos(lineNo, columnNo)
+            if (!valid) {
+                error("$lineNo:$columnNo: invalid token: $c")
             }
 
             if (c == '\n') {
@@ -77,18 +65,29 @@ class Lexer {
             } else {
                 columnNo++
             }
-        }
 
-        // Do one final loop through the state machines to consume the last token
-        for (machine in stateMachines) {
-            if (machine.isAccept()) {
-                val token = machine.accept(start, TokenPos(lineNo, columnNo))
-                tokens.add(token)
-                break
+            if (acceptable.isNotEmpty()) {
+                val maximal = acceptable.filter {
+                    i + 1 < text.toCharArray().size && it.peek(text.toCharArray()[i + 1])
+                }
+
+                val machine = if (maximal.isEmpty()) {
+                    acceptable[0]
+                } else {
+                    null
+                }
+
+                machine?.let {
+                    // State machine is in an accept state and cannot maximal munch
+                    val token = machine.accept(start, TokenPos(lineNo, columnNo))
+                    tokens.add(token)
+
+                    stateMachines.forEach { it.reset() }
+                    start = TokenPos(lineNo, columnNo)
+                }
             }
         }
 
-        stateMachines.forEach { it.reset() }
         return filterIgnored(tokens)
     }
 
