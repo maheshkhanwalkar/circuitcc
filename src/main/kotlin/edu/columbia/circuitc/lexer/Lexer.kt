@@ -15,6 +15,7 @@ class Lexer {
         DFALoader.get("bits") { text, start, end -> Token(TokenType.BITS, text, start, end) },
         DFALoader.get("clock") { text, start, end -> Token(TokenType.CLOCK, text, start, end) },
         DFALoader.get("register") { text, start, end -> Token(TokenType.REGISTER, text, start, end) },
+        DFALoader.get("circuit") { text, start, end -> Token(TokenType.CIRCUIT, text, start, end) },
 
         // Symbols
         DFALoader.get("<") { text, start, end -> Token(TokenType.LEFT_ANGLE, text, start, end) },
@@ -26,6 +27,8 @@ class Lexer {
         DFALoader.get(")") { text, start, end -> Token(TokenType.RIGHT_PAREN, text, start, end) },
         DFALoader.get(";") { text, start, end -> Token(TokenType.SEMICOLON, text, start, end) },
         DFALoader.get(",") { text, start, end -> Token(TokenType.COMMA, text, start, end) },
+        DFALoader.get("?") { text, start, end -> Token(TokenType.QUESTION, text, start, end) },
+        DFALoader.get(":") { text, start, end -> Token(TokenType.COLON, text, start, end) },
 
         // Identifiers/Numbers
         DFALoader.get("id")      { text, start, end -> Token(TokenType.IDENTIFIER, text, start, end) },
