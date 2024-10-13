@@ -105,3 +105,99 @@ the line with syntactic parsing) which can pinpoint where in the original source
 Upon encountering an invalid token, the lexer prints out the error with the invalid token string and position. However,
 the lexer does not just exit after encountering the first invalid token. Instead, it prints the error and keeps on
 trying to generate more tokens and printing out more errors if it encounters more invalid tokens.
+
+## Sample Programs
+
+The samples/ directory contains 5 sample programs. Here's a description for them:
+
+### one.circuit
+
+Very basic circuit representing an 1-bit input pin which we're setting to 1.
+
+<IN, int>
+<BITS, bits>
+<LEFT_ANGLE, < >
+<NUM, 1>
+<RIGHT_ANGLE, > >
+<IDENTIFIER, i>
+<EQUALS, = >
+<NUM, 1>
+<SEMICOLON, ; >
+
+### two.circuit
+
+An example where the lexer can tokenize without whitespace.
+
+<IDENTIFIER, abc>
+<EQUALS, = >
+<IDENTIFIER, def>
+<SEMICOLON, ; >
+
+### three.circuit
+
+An example to demonstrate that comments are ignored by the lexer
+
+<CIRCUIT, circuit>
+<IDENTIFIER, c>
+<LEFT_PAREN, ( >
+<RIGHT_PAREN, ) >
+
+### four.circuit
+
+An example to demonstrate error handling. The errors are reported, but the lexer still tries to tokenize everything
+else that is still valid.
+
+invalid token: #
+invalid token: !
+
+<IDENTIFIER, a>
+<EQUALS, = >
+<IDENTIFIER, abc>
+<OR, or>
+<IDENTIFIER, def>
+<SEMICOLON, ; >
+<IDENTIFIER, c>
+<EQUALS, = >
+<IDENTIFIER, a>
+<QUESTION, ? >
+<NUM, 1>
+<COLON, : >
+<NUM, 0>
+<SEMICOLON, ; >
+
+### five.circuit
+
+A more complicated circuit which uses more language constructs.
+
+<CIRCUIT, circuit>
+<IDENTIFIER, example>
+<LEFT_PAREN, ( >
+<OUT, out>
+<BITS, bits>
+<LEFT_ANGLE, < >
+<NUM, 1>
+<RIGHT_ANGLE, > >
+<IDENTIFIER, output>
+<RIGHT_PAREN, ) >
+<LEFT_BRACE, { >
+<CLOCK, clock>
+<IDENTIFIER, c>
+<SEMICOLON, ; >
+<REGISTER, register >
+<LEFT_ANGLE, < >
+<NUM, 1, >
+<RIGHT_ANGLE, >, >
+<IDENTIFIER, reg, >
+<LEFT_PAREN, (, >
+<IDENTIFIER, c, >
+<COMMA, , >
+<NUM, 0>
+<OR, or>
+<NUM, 1>
+<COMMA, , >
+<NUM, 1>
+<COMMA, , >
+<NUM, 0>
+<RIGHT_PAREN, )>
+<SEMICOLON, ; >
+<RIGHT_BRACE, } >
