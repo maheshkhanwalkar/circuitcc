@@ -57,6 +57,7 @@ class Lexer {
             val acceptable = mutableListOf<DFA>()
 
             if (!inComment) {
+                // Detect start of comment
                 if (c == '/') {
                     if (i + 1 < text.length && text[i + 1] == '/') {
                         inComment = true
@@ -64,6 +65,7 @@ class Lexer {
                         handleError(c)
                     }
                 } else {
+                    // Consume the character and tabulate all DFAs in an accept state
                     for (machine in stateMachines) {
                         val res = machine.consume(c)
                         valid = valid || res
@@ -73,6 +75,7 @@ class Lexer {
                         }
                     }
 
+                    // Invalid token -- all DFAs rejected it
                     if (!valid) {
                         handleError(c)
                     }
@@ -83,6 +86,7 @@ class Lexer {
                 lineNo++
                 columnNo = 1
 
+                // Newline terminates the comment
                 if (inComment) {
                     inComment = false
                     start = TokenPos(lineNo, columnNo)
@@ -92,10 +96,14 @@ class Lexer {
             }
 
             if (acceptable.isNotEmpty()) {
+                // Compute all DFAs currently in an accept state that could accept another character, if one exists.
+                // This will give us the list of DFAs that can still maximal munch.
                 val maximal = acceptable.filter {
                     i + 1 < text.toCharArray().size && it.peek(text.toCharArray()[i + 1])
                 }
 
+                // If no DFAs can still maximal munch, then select the DFA with the highest priority.
+                // Otherwise, defer this decision to the next iteration
                 val machine = if (maximal.isEmpty()) {
                     acceptable[0]
                 } else {
@@ -103,7 +111,6 @@ class Lexer {
                 }
 
                 machine?.let {
-                    // State machine is in an accept state and cannot maximal munch
                     val token = machine.accept(start, TokenPos(lineNo, columnNo))
                     tokens.add(token)
 
