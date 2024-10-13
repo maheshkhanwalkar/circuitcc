@@ -5,7 +5,8 @@
 ## Lexical Grammar
 
 There are four main components of the lexical grammar: keywords, symbols, identifiers, and numbers. The priorities
-in case of ambiguity is exactly in the order presented, with keywords having the highest and numbers the lowest.
+in case of ambiguity is exactly in the order presented, with keywords having the highest and numbers the lowest. There
+are also whitespace and comments, which the lexer understands, but ignores (does not generate tokens for them)
 
 ### Keywords
 
@@ -68,6 +69,15 @@ of acceptable identifiers would be `[a-z]+`
 A number is a string made up of one or more numeric characters, with the restriction that there cannot be any leading
 zeros, e.g. 0 is fine, but 08 would be split into two tokens. The regex that would describe the set of acceptable
 identifiers would be: `0|([1-9][0-9]*)`
+
+### Whitespace
+
+Whitespace (space, tab, newline, carriage return) is ignored.
+
+### Comment
+
+The "//" denotes the start of a comment, which causes the lexer to ignore all characters that follow it until the next
+line is reached. Only single line comments are supported. (e.g. no /* */ multi-line comments)
 
 ## Scanning Algorithm
 
