@@ -48,9 +48,8 @@ class Lexer {
         var inComment = false
 
         fun handleError(c: Char) {
+            // Report the error and keep on going
             println("error: $lineNo:$columnNo: invalid token: $c")
-            // "Delete" the character and keep on going
-            stateMachines.forEach { it.rewindOnce() }
         }
 
         for ((i, c) in text.toCharArray().withIndex()) {
