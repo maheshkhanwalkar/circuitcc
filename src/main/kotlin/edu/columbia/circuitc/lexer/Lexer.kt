@@ -32,7 +32,7 @@ class Lexer {
 
         // Identifiers/Numbers
         DFALoader.get("id")      { text, start, end -> Token(TokenType.IDENTIFIER, text, start, end) },
-        DFALoader.get("num") { text, start, end -> Token(TokenType.INT, text, start, end) },
+        DFALoader.get("num") { text, start, end -> Token(TokenType.NUM, text, start, end) },
 
         // Whitespace
         DFALoader.get("whitespace") { text, start, end -> Token(TokenType.IGNORED, text, start, end) },
