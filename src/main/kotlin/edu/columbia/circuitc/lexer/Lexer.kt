@@ -47,6 +47,12 @@ class Lexer {
 
         var inComment = false
 
+        fun handleError(c: Char) {
+            println("error: $lineNo:$columnNo: invalid token: $c")
+            // "Delete" the character and keep on going
+            stateMachines.forEach { it.rewindOnce() }
+        }
+
         for ((i, c) in text.toCharArray().withIndex()) {
             var valid = false
             val acceptable = mutableListOf<DFA>()
@@ -56,7 +62,7 @@ class Lexer {
                     if (i + 1 < text.length && text[i + 1] == '/') {
                         inComment = true
                     } else {
-                        error("$lineNo:$columnNo: invalid token: $c")
+                        handleError(c)
                     }
                 } else {
                     for (machine in stateMachines) {
@@ -69,7 +75,7 @@ class Lexer {
                     }
 
                     if (!valid) {
-                        error("$lineNo:$columnNo: invalid token: $c")
+                        handleError(c)
                     }
                 }
             }
