@@ -45,26 +45,43 @@ class Lexer {
         val tokens = mutableListOf<Token>()
         var start = TokenPos(lineNo, columnNo)
 
+        var inComment = false
+
         for ((i, c) in text.toCharArray().withIndex()) {
             var valid = false
             val acceptable = mutableListOf<DFA>()
 
-            for (machine in stateMachines) {
-                val res = machine.consume(c)
-                valid = valid || res
+            if (!inComment) {
+                if (c == '/') {
+                    if (i + 1 < text.length && text[i + 1] == '/') {
+                        inComment = true
+                    } else {
+                        error("$lineNo:$columnNo: invalid token: $c")
+                    }
+                } else {
+                    for (machine in stateMachines) {
+                        val res = machine.consume(c)
+                        valid = valid || res
 
-                if (machine.isAccept()) {
-                    acceptable.add(machine)
+                        if (machine.isAccept()) {
+                            acceptable.add(machine)
+                        }
+                    }
+
+                    if (!valid) {
+                        error("$lineNo:$columnNo: invalid token: $c")
+                    }
                 }
-            }
-
-            if (!valid) {
-                error("$lineNo:$columnNo: invalid token: $c")
             }
 
             if (c == '\n') {
                 lineNo++
                 columnNo = 1
+
+                if (inComment) {
+                    inComment = false
+                    start = TokenPos(lineNo, columnNo)
+                }
             } else {
                 columnNo++
             }
