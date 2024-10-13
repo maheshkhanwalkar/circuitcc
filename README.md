@@ -99,3 +99,9 @@ The Token class represents a token and contains four fields:
 
 The reason for keeping `start` and `end` fields in the token is to allow for better error messaging (especially down
 the line with syntactic parsing) which can pinpoint where in the original source the error arises.
+
+## Error Handling
+
+Upon encountering an invalid token, the lexer prints out the error with the invalid token string and position. However,
+the lexer does not just exit after encountering the first invalid token. Instead, it prints the error and keeps on
+trying to generate more tokens and printing out more errors if it encounters more invalid tokens.
