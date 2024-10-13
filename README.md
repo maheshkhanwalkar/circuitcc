@@ -115,13 +115,21 @@ The samples/ directory contains 5 sample programs. Here's a description for them
 Very basic circuit representing an 1-bit input pin which we're setting to 1.
 
 <IN, int>
+
 <BITS, bits>
+
 <LEFT_ANGLE, < >
+
 <NUM, 1>
+
 <RIGHT_ANGLE, > >
+
 <IDENTIFIER, i>
+
 <EQUALS, = >
+
 <NUM, 1>
+
 <SEMICOLON, ; >
 
 ### two.circuit
@@ -129,8 +137,11 @@ Very basic circuit representing an 1-bit input pin which we're setting to 1.
 An example where the lexer can tokenize without whitespace.
 
 <IDENTIFIER, abc>
+
 <EQUALS, = >
+
 <IDENTIFIER, def>
+
 <SEMICOLON, ; >
 
 ### three.circuit
@@ -138,8 +149,11 @@ An example where the lexer can tokenize without whitespace.
 An example to demonstrate that comments are ignored by the lexer
 
 <CIRCUIT, circuit>
+
 <IDENTIFIER, c>
+
 <LEFT_PAREN, ( >
+
 <RIGHT_PAREN, ) >
 
 ### four.circuit
@@ -151,18 +165,31 @@ invalid token: #
 invalid token: !
 
 <IDENTIFIER, a>
+
 <EQUALS, = >
+
 <IDENTIFIER, abc>
+
 <OR, or>
+
 <IDENTIFIER, def>
+
 <SEMICOLON, ; >
+
 <IDENTIFIER, c>
+
 <EQUALS, = >
+
 <IDENTIFIER, a>
+
 <QUESTION, ? >
+
 <NUM, 1>
+
 <COLON, : >
+
 <NUM, 0>
+
 <SEMICOLON, ; >
 
 ### five.circuit
@@ -170,34 +197,65 @@ invalid token: !
 A more complicated circuit which uses more language constructs.
 
 <CIRCUIT, circuit>
+
 <IDENTIFIER, example>
+
 <LEFT_PAREN, ( >
+
 <OUT, out>
+
 <BITS, bits>
+
 <LEFT_ANGLE, < >
+
 <NUM, 1>
+
 <RIGHT_ANGLE, > >
+
 <IDENTIFIER, output>
+
 <RIGHT_PAREN, ) >
+
 <LEFT_BRACE, { >
+
 <CLOCK, clock>
+
 <IDENTIFIER, c>
+
 <SEMICOLON, ; >
+
 <REGISTER, register >
+
 <LEFT_ANGLE, < >
-<NUM, 1, >
-<RIGHT_ANGLE, >, >
-<IDENTIFIER, reg, >
-<LEFT_PAREN, (, >
-<IDENTIFIER, c, >
+
+<NUM, 1>
+
+<RIGHT_ANGLE, > >
+
+<IDENTIFIER, reg>
+
+<LEFT_PAREN, ( >
+
+<IDENTIFIER, c>
+
 <COMMA, , >
+
 <NUM, 0>
+
 <OR, or>
+
 <NUM, 1>
+
 <COMMA, , >
+
 <NUM, 1>
+
 <COMMA, , >
+
 <NUM, 0>
+
 <RIGHT_PAREN, )>
+
 <SEMICOLON, ; >
+
 <RIGHT_BRACE, } >
