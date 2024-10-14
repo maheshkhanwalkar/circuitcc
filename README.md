@@ -108,7 +108,8 @@ trying to generate more tokens and printing out more errors if it encounters mor
 
 ## Sample Programs
 
-The samples/ directory contains 5 sample programs. Here's a description for them:
+The samples/ directory contains 5 sample programs. Here's a description for them and expected output. The actual output
+from the lexer contains additional information (token positions), which is omitted here for brevity.
 
 ### one.circuit
 
