@@ -106,6 +106,18 @@ Upon encountering an invalid token, the lexer prints out the error with the inva
 the lexer does not just exit after encountering the first invalid token. Instead, it prints the error and keeps on
 trying to generate more tokens and printing out more errors if it encounters more invalid tokens.
 
+## Installation Steps and Running
+
+To build and run the sample programs (described below), there is a provided Dockerfile which will set up a container
+with JDK 17 installed and run the `execute.sh` script which runs all the sample programs.
+
+**Assumption:** docker is installed
+
+```shell
+docker build -t circuitcc .
+docker run circuitcc
+```
+
 ## Sample Programs
 
 The samples/ directory contains 5 sample programs. Here's a description for them and expected output. The actual output
