@@ -3,13 +3,13 @@ package edu.columbia.circuitc.lexer
 /**
  * Type of lexical token.
  */
-enum class TokenType {
-    AND, OR, NOT, XOR,
-    IN, OUT, BITS,
-    CLOCK, REGISTER, CIRCUIT,
-    LEFT_ANGLE, RIGHT_ANGLE, EQUALS, LEFT_BRACE, RIGHT_BRACE, LEFT_PAREN, RIGHT_PAREN, SEMICOLON, COMMA, QUESTION, COLON,
-    IDENTIFIER, NUM,
-    IGNORED
+enum class TokenType(val text: String) {
+    AND("and"), OR("or"), NOT("not"), XOR("xor"),
+    IN("in"), OUT("out"), BITS("bits"),
+    CLOCK("clock"), REGISTER("register"), CIRCUIT("circuit"),
+    LEFT_ANGLE("<"), RIGHT_ANGLE(">"), EQUALS("="), LEFT_BRACE("{"), RIGHT_BRACE("}"), LEFT_PAREN("("), RIGHT_PAREN(")"), SEMICOLON(";"), COMMA(","), QUESTION("?"), COLON(":"),
+    IDENTIFIER("identifier"), NUM("number"),
+    IGNORED("ignored");
 }
 
 /**

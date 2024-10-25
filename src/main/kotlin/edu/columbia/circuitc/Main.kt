@@ -11,7 +11,7 @@ fun main(args: Array<String>) {
     val tokens = lexer.tokenize(content)
 
     val parser = Parser()
-    parser.parse(tokens)
+    println(parser.parse(tokens))
 }
 
 private fun readInputFile(args: Array<String>): String {
