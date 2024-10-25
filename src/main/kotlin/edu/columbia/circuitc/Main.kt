@@ -1,6 +1,7 @@
 package edu.columbia.circuitc
 
 import edu.columbia.circuitc.lexer.Lexer
+import edu.columbia.circuitc.parser.Parser
 import java.io.File
 
 fun main(args: Array<String>) {
@@ -9,7 +10,8 @@ fun main(args: Array<String>) {
     val lexer = Lexer()
     val tokens = lexer.tokenize(content)
 
-    tokens.forEach { println(it) }
+    val parser = Parser()
+    parser.parse(tokens)
 }
 
 private fun readInputFile(args: Array<String>): String {
