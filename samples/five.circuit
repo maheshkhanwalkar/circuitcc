@@ -1,4 +1,5 @@
 circuit example(out bits<1> output) {
     clock c;
-    register<1> reg(c, 0 or 1, 1, 0);
+    bits<1> tmp = 0 or 1;
+    register<1> reg(c, tmp, 1, 0);
 }
