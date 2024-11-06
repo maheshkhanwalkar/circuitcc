@@ -1,27 +1,46 @@
 package edu.columbia.circuitc.parser
 
-interface Expression
+import edu.columbia.circuitc.visitor.Visitor
+
+interface Expression {
+    fun accept(visitor: Visitor)
+}
 
 /**
  * Circuit expression, which is the top-level construct of the language.
  */
-data class CircuitExpression(private val name: String, private val args: ArgListExpression,
-                             private val statements: StatementListExpression) : Expression
+data class CircuitExpression(val name: String, val args: ArgListExpression, val statements: StatementListExpression) : Expression {
+    override fun accept(visitor: Visitor) {
+        visitor.visit(this)
+    }
+}
 
 /**
  * Argument list expression.
  */
-data class ArgListExpression(val args: List<ArgumentExpression>) : Expression
+data class ArgListExpression(val args: List<ArgumentExpression>) : Expression {
+    override fun accept(visitor: Visitor) {
+        visitor.visit(this)
+    }
+}
 
 /**
  * Argument expression.
  */
-data class ArgumentExpression(private val bitWidth: Int, private val name: String, private val isInput: Boolean) : Expression
+data class ArgumentExpression(val bitWidth: Int, val name: String, val isInput: Boolean) : Expression {
+    override fun accept(visitor: Visitor) {
+        visitor.visit(this)
+    }
+}
 
 /**
  * Statement list expression.
  */
-data class StatementListExpression(val statements: List<StatementExpression>) : Expression
+data class StatementListExpression(val statements: List<StatementExpression>) : Expression {
+    override fun accept(visitor: Visitor) {
+        visitor.visit(this)
+    }
+}
 
 /**
  * Statement expression.
@@ -46,10 +65,22 @@ interface Operand: RValExpression
 /**
  * Operand list expression.
  */
-data class OperandListExpression(val operands: List<Operand>) : Expression
+data class OperandListExpression(val operands: List<Operand>) : Expression {
+    override fun accept(visitor: Visitor) {
+        visitor.visit(this)
+    }
+}
 
-data class NumericalOperand(private val value: Int): Operand
-data class IdentifierOperand(private val name: String): Operand, LValExpression
+data class NumericalOperand(val value: Int): Operand {
+    override fun accept(visitor: Visitor) {
+        visitor.visit(this)
+    }
+}
+data class IdentifierOperand(val name: String): Operand, LValExpression {
+    override fun accept(visitor: Visitor) {
+        visitor.visit(this)
+    }
+}
 
 enum class UnaryOp {
     NOT
@@ -62,18 +93,29 @@ enum class BinOp {
 /**
  * Unary operand expression. OP RHS
  */
-data class UnaryOpExpression(private val rhs: Operand, private val type: UnaryOp): RValExpression
+data class UnaryOpExpression(val rhs: Operand, val type: UnaryOp): RValExpression {
+    override fun accept(visitor: Visitor) {
+        visitor.visit(this)
+    }
+}
 
 /**
  * Binary operand expression. LHS OP RHS
  */
-data class BinOpExpression(private val lhs: Operand, private val rhs: Operand, private val type: BinOp): RValExpression
+data class BinOpExpression(val lhs: Operand, val rhs: Operand, val type: BinOp): RValExpression {
+    override fun accept(visitor: Visitor) {
+        visitor.visit(this)
+    }
+}
 
 /**
  * Ternary operand expression. COND ? TRUE-OP : FALSE-OP
  */
-data class TernaryOpExpression(private val condition: Operand, private val trueOp: Operand,
-                               private val falseOp: Operand) : RValExpression
+data class TernaryOpExpression(val condition: Operand, val trueOp: Operand, val falseOp: Operand) : RValExpression {
+    override fun accept(visitor: Visitor) {
+        visitor.visit(this)
+    }
+}
 
 /**
  * Declaration expression -- declares a variable. It can be a lval of an assignment.
@@ -83,21 +125,36 @@ interface DeclExpression: LValExpression
 /**
  * Wire declaration expression.
  */
-data class WireDeclExpression(private val bitWidth: Int, private val name: String) : DeclExpression
+data class WireDeclExpression(val bitWidth: Int, val name: String) : DeclExpression {
+    override fun accept(visitor: Visitor) {
+        visitor.visit(this)
+    }
+}
 
 /**
  * Clock declaration expression.
  */
-data class ClockDeclExpression(private val name: String) : DeclExpression, StatementExpression
+data class ClockDeclExpression(val name: String) : DeclExpression, StatementExpression {
+    override fun accept(visitor: Visitor) {
+        visitor.visit(this)
+    }
+}
 
 /**
  * Register declaration expression.
  */
 data class RegisterDeclExpression(
-    private val bitWidth: Int,
-    private val name: String, private val params: OperandListExpression) : DeclExpression, StatementExpression
+    val bitWidth: Int, val name: String, val params: OperandListExpression) : DeclExpression, StatementExpression {
+        override fun accept(visitor: Visitor) {
+            visitor.visit(this)
+        }
+    }
 
 /**
  * Assignment expression. LVAL = RVAL
  */
-data class AssignmentExpression(private val lVal: LValExpression, private val rVal: RValExpression): StatementExpression
+data class AssignmentExpression(val lVal: LValExpression, val rVal: RValExpression): StatementExpression {
+    override fun accept(visitor: Visitor) {
+        visitor.visit(this)
+    }
+}
