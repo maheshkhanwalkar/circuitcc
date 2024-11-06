@@ -2,7 +2,13 @@ package edu.columbia.circuitc.visitor
 
 import edu.columbia.circuitc.parser.*
 
-class ASTPrinter : Visitor {
+/**
+ * AST Printer.
+ *
+ * Leverages the visitor pattern to traverse through the AST and print out the
+ * nodes.
+ */
+class ASTPrinter : Visitor<Unit> {
     private var indent = 0
 
     override fun visit(circuitExpression: CircuitExpression) {
