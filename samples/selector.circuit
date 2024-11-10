@@ -1,0 +1,4 @@
+// This circuit implements a binary 'selector', returning one of the inputs depending on the selector bit
+circuit binarySelect(in bits<4> a, in bits<4> b, in bits<1> sel, out bits<4> output) {
+    output = sel ? a : b;
+}

@@ -1,0 +1,4 @@
+// This circuit implements a basic or gate, returning the result in 'output'
+circuit basicOrGate(in bits<1> a, in bits<1> b, out bits<1> output) {
+    output = a or b;
+}

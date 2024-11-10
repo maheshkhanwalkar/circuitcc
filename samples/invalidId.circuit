@@ -1,0 +1,4 @@
+circuit invalid() {
+    // Cannot use keywords as an identifier
+    bits<1> circuit = 1;
+}
