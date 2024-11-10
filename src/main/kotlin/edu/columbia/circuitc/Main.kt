@@ -2,16 +2,18 @@ package edu.columbia.circuitc
 
 import edu.columbia.circuitc.lexer.Lexer
 import edu.columbia.circuitc.parser.Parser
+import edu.columbia.circuitc.printer.PrettyPrinter
 import edu.columbia.circuitc.visitor.printAST
 import java.io.File
 
 fun main(args: Array<String>) {
     val content = readInputFile(args)
+    val printer = PrettyPrinter(args[0], content)
 
     val lexer = Lexer()
     val tokens = lexer.tokenize(content)
 
-    val parser = Parser()
+    val parser = Parser(printer)
     val ast = parser.parse(tokens)
 
     printAST(ast)

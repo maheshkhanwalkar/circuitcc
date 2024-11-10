@@ -2,8 +2,10 @@ package edu.columbia.circuitc.parser
 
 import edu.columbia.circuitc.lexer.Token
 import edu.columbia.circuitc.lexer.TokenType
+import edu.columbia.circuitc.printer.PrettyPrinter
+import kotlin.system.exitProcess
 
-class Parser {
+class Parser(private val printer: PrettyPrinter) {
     fun parse(tokens: List<Token>): Expression {
         return parseProgram(tokens)
     }
@@ -248,7 +250,7 @@ class Parser {
 
     private fun parseOperand(tokens: List<Token>): Pair<Operand, List<Token>> {
         if (tokens.isEmpty()) {
-            unexpectedEOF(TokenType.IDENTIFIER);
+            unexpectedEOF(TokenType.IDENTIFIER)
         }
 
         // OP -> ID | NUM
@@ -256,7 +258,7 @@ class Parser {
             TokenType.IDENTIFIER -> IdentifierOperand(tokens[0].text) to tokens.subList(1, tokens.size)
             TokenType.NUM -> NumericalOperand(tokens[0].text.toInt()) to tokens.subList(1, tokens.size)
             else -> {
-                unexpectedToken(tokens[0], TokenType.IDENTIFIER.text)
+                unexpectedToken(tokens[0], or(TokenType.IDENTIFIER.text, TokenType.NUM.text))
                 throw Exception() // placate compiler
             }
         }
@@ -327,7 +329,8 @@ class Parser {
                 }
 
                 else -> {
-                    unexpectedToken(nTokens[0], TokenType.AND.text)
+                    unexpectedToken(nTokens[0], or(TokenType.AND.text,
+                        TokenType.OR.text, TokenType.XOR.text, TokenType.QUESTION.text))
                     throw Exception() // placate compiler
                 }
             }
@@ -363,7 +366,12 @@ class Parser {
     }
 
     private fun unexpectedToken(token: Token, expected: String) {
-        println("(${token.start.row}, ${token.start.col}): unexpected token '${token.text}', expected: '$expected'")
-        throw IllegalStateException("unexpected token")
+        val message = "unexpected token '${token.text}', expected: '$expected'"
+        printer.printMessage(message, token.start, token.end)
+        exitProcess(0)
+    }
+
+    private fun or(vararg messages: String): String {
+        return messages.joinToString("', or '")
     }
 }
