@@ -89,6 +89,9 @@ docker build -t circuitcc .
 docker run circuitcc
 ```
 
+## Video Link
+https://www.youtube.com/watch?v=4ZarytGdUsM
+
 ## Sample Programs
 
 The samples/ directory contains 5 sample programs. Here's a description for them and expected output
