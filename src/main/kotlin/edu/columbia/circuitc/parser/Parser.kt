@@ -211,11 +211,6 @@ class Parser(private val printer: PrettyPrinter) {
             unexpectedEOF(TokenType.RIGHT_BRACE)
         }
 
-        // SEMI-STMT-LIST -> epsilon
-        if (tokens[0].type == TokenType.RIGHT_BRACE) {
-            return emptyList<StatementExpression>() to tokens
-        }
-
         if (tokens[0].type != TokenType.SEMICOLON) {
             unexpectedToken(tokens[0], TokenType.SEMICOLON.text)
         }
@@ -330,7 +325,7 @@ class Parser(private val printer: PrettyPrinter) {
 
                 else -> {
                     unexpectedToken(nTokens[0], or(TokenType.AND.text,
-                        TokenType.OR.text, TokenType.XOR.text, TokenType.QUESTION.text))
+                        TokenType.OR.text, TokenType.XOR.text, TokenType.QUESTION.text, TokenType.SEMICOLON.text))
                     throw Exception() // placate compiler
                 }
             }

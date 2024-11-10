@@ -1,5 +1,0 @@
-circuit example(out bits<1> output) {
-    clock c;
-    bits<1> tmp = 0 or 1;
-    register<1> reg(c, tmp, 1, 0);
-}
