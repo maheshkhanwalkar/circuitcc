@@ -1,15 +1,14 @@
-printf "Lexing one.circuit"
-java -jar build/libs/circuitcc.jar samples/one.circuit
+printf "Lexing invalidId.circuit"
+java -jar build/libs/circuitcc.jar samples/invalidId.circuit
 
-printf "\nLexing two.circuit"
-java -jar build/libs/circuitcc.jar samples/two.circuit
+printf "\nLexing nand.circuit"
+java -jar build/libs/circuitcc.jar samples/nand.circuit
 
-printf "\nLexing three.circuit"
-java -jar build/libs/circuitcc.jar samples/three.circuit
+printf "\nLexing orGate.circuit"
+java -jar build/libs/circuitcc.jar samples/orGate.circuit
 
-printf "\nLexing four.circuit"
-java -jar build/libs/circuitcc.jar samples/four.circuit
+printf "\nLexing register.circuit"
+java -jar build/libs/circuitcc.jar samples/register.circuit
 
-printf "\nLexing five.circuit"
-java -jar build/libs/circuitcc.jar samples/five.circuit
-
+printf "\nLexing selector.circuit"
+java -jar build/libs/circuitcc.jar samples/selector.circuit

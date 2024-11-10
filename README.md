@@ -78,3 +78,13 @@ The visitor interface is defined within `Visitor.kt` which defines a `visit` met
 the AST. The `ASTPrinter` class then implements the `Visitor` interface with the functionality of printing the node's
 information. The purpose of creating this visitor interface and pattern is to be forward-looking, since this can be
 used during the type-checking (semantic analysis) and code generation phases.
+
+## Installation Steps and Running
+To build and run the sample programs (described below), there is a provided Dockerfile which will set up a container with JDK 17 installed and run the execute.sh script which runs all the sample programs.
+
+Assumption: docker is installed
+
+```shell
+docker build -t circuitcc .
+docker run circuitcc
+```
