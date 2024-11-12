@@ -90,7 +90,7 @@ docker run circuitcc
 ```
 
 ## Video Link
-https://www.youtube.com/watch?v=4ZarytGdUsM
+https://www.youtube.com/watch?v=8l0aJVOMzUk
 
 ## Sample Programs
 
