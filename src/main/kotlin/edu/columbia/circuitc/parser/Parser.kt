@@ -11,7 +11,7 @@ class Parser(private val printer: PrettyPrinter) {
     }
 
     private fun parseProgram(tokens: List<Token>): CircuitExpression {
-        var currTokens = tokens
+        val currTokens = tokens.toMutableList()
 
         // PROG -> CIRCUIT ID '(' ARG-LIST ')' '{' STMT-LIST '}'
         val expectedLeftStructure = listOf(
@@ -28,40 +28,38 @@ class Parser(private val printer: PrettyPrinter) {
         validateStructure(currTokens, expectedLeftStructure)
 
         val circuitName = currTokens[1].text
-        val (argList, nTokens) = parseArgList(currTokens.subList(expectedLeftStructure.size, currTokens.size))
+        currTokens.removeAmount(expectedLeftStructure.size)
 
-        currTokens = nTokens
+        val argList = parseArgList(currTokens)
 
         validateStructure(currTokens, expectedRightStructure)
 
-        currTokens = currTokens.subList(expectedRightStructure.size, currTokens.size)
-        val (stmtList, remTokens) = parseStatementList(currTokens)
+        currTokens.removeAmount(expectedRightStructure.size)
+        val stmtList = parseStatementList(currTokens)
 
-        currTokens = remTokens
         validateStructure(currTokens, listOf(TokenType.RIGHT_BRACE))
-
         return CircuitExpression(circuitName, argList, stmtList)
     }
 
-    private fun parseArgList(tokens: List<Token>): Pair<ArgListExpression, List<Token>> {
+    private fun parseArgList(tokens: MutableList<Token>): ArgListExpression {
         if (tokens.isEmpty()) {
             unexpectedEOF(TokenType.RIGHT_PAREN)
         }
 
         // ARG-LIST -> epsilon
         if (tokens[0].type == TokenType.RIGHT_PAREN) {
-            return ArgListExpression(emptyList()) to tokens
+            return ArgListExpression(emptyList())
         }
 
         // ARG-LIST -> ARG COMMA-ARG-LIST
-        val (arg, nTokens) = parseArg(tokens)
-        val (argList, remTokens) = parseCommaArgList(nTokens)
+        val arg = parseArg(tokens)
+        val argList = parseCommaArgList(tokens)
 
         val allArgs = mutableListOf(arg) + argList
-        return ArgListExpression(allArgs) to remTokens
+        return ArgListExpression(allArgs)
     }
 
-    private fun parseArg(tokens: List<Token>): Pair<ArgumentExpression, List<Token>> {
+    private fun parseArg(tokens: MutableList<Token>): ArgumentExpression {
         // ARG -> IN  BITS '<' NUM '>' ID |
         //        OUT BITS '<' NUM '>' ID
         val expectedStructure = listOf(
@@ -85,24 +83,24 @@ class Parser(private val printer: PrettyPrinter) {
             }
         }
 
-        var currTokens = tokens.subList(1, tokens.size)
-        validateStructure(currTokens, expectedStructure)
+        tokens.removeAmount(1)
+        validateStructure(tokens, expectedStructure)
 
-        val bitWidth = currTokens[2].text.toInt()
-        val name = currTokens[4].text
+        val bitWidth = tokens[2].text.toInt()
+        val name = tokens[4].text
 
-        currTokens = currTokens.subList(expectedStructure.size, currTokens.size)
-        return ArgumentExpression(bitWidth, name, isInput) to currTokens
+        tokens.removeAmount(expectedStructure.size)
+        return ArgumentExpression(bitWidth, name, isInput)
     }
 
-    private fun parseCommaArgList(tokens: List<Token>): Pair<List<ArgumentExpression>, List<Token>> {
+    private fun parseCommaArgList(tokens: MutableList<Token>): List<ArgumentExpression> {
         if (tokens.isEmpty()) {
             unexpectedEOF(TokenType.RIGHT_PAREN)
         }
 
         // COMMA-ARG-LIST -> epsilon
         if (tokens[0].type == TokenType.RIGHT_PAREN) {
-            return emptyList<ArgumentExpression>() to tokens
+            return emptyList()
         }
 
         // COMMA-ARG-LIST -> ',' ARG COMMA-ARG-LIST
@@ -110,36 +108,38 @@ class Parser(private val printer: PrettyPrinter) {
             unexpectedToken(tokens[0], TokenType.COMMA.text)
         }
 
-        val (arg, nTokens) = parseArg(tokens.subList(1, tokens.size))
-        val (argList, remTokens) = parseCommaArgList(nTokens)
-        return listOf(arg) + argList to remTokens
+        tokens.removeAmount(1)
+        val arg = parseArg(tokens)
+        val argList = parseCommaArgList(tokens)
+
+        return listOf(arg) + argList
     }
 
-    private fun parseStatementList(tokens: List<Token>): Pair<StatementListExpression, List<Token>> {
+    private fun parseStatementList(tokens: MutableList<Token>): StatementListExpression {
         if (tokens.isEmpty()) {
             unexpectedEOF(TokenType.RIGHT_BRACE)
         }
 
         // STMT-LIST -> epsilon
         if (tokens[0].type == TokenType.RIGHT_BRACE) {
-            return StatementListExpression(emptyList()) to tokens
+            return StatementListExpression(emptyList())
         }
 
         // STMT-LIST -> STMT SEMI-STMT-LIST
-        val (arg, nTokens) = parseStatement(tokens)
-        val (argList, remTokens) = parseSemiStatementList(nTokens)
+        val arg = parseStatement(tokens)
+        val argList = parseSemiStatementList(tokens)
 
         val allArgs = mutableListOf(arg) + argList
-        return StatementListExpression(allArgs) to remTokens
+        return StatementListExpression(allArgs)
     }
 
-    private fun parseStatement(tokens: List<Token>): Pair<StatementExpression, List<Token>> {
+    private fun parseStatement(tokens: MutableList<Token>): StatementExpression {
         if (tokens.isEmpty()) {
             unexpectedEOF(TokenType.IDENTIFIER)
         }
 
         // STMT -> LVAL | LVAL '=' RVAL
-        val (lVal: LValExpression, currTokens) = when(tokens[0].type) {
+        val lVal: LValExpression = when(tokens[0].type) {
             // LVAL -> BITS '<' NUM '>' ID
             TokenType.BITS -> {
                 val expectedStructure = listOf(
@@ -151,7 +151,11 @@ class Parser(private val printer: PrettyPrinter) {
                 )
 
                 validateStructure(tokens, expectedStructure)
-                WireDeclExpression(tokens[2].text.toInt(), tokens[4].text) to tokens.subList(expectedStructure.size, tokens.size)
+                val bitWidth = tokens[2].text.toInt()
+                val name = tokens[4].text
+
+                tokens.removeAmount(expectedStructure.size)
+                WireDeclExpression(bitWidth, name)
             }
 
             // LVAL -> CLOCK ID
@@ -159,7 +163,10 @@ class Parser(private val printer: PrettyPrinter) {
                 val expectedStructure = listOf(TokenType.CLOCK, TokenType.IDENTIFIER)
                 validateStructure(tokens, expectedStructure)
 
-                ClockDeclExpression(tokens[1].text) to tokens.subList(expectedStructure.size, tokens.size)
+                val name = tokens[1].text
+                tokens.removeAmount(expectedStructure.size)
+
+                ClockDeclExpression(name)
             }
 
             // LVAL -> REGISTER '<' NUM '>' ID '(' OP-LIST ')'
@@ -170,22 +177,28 @@ class Parser(private val printer: PrettyPrinter) {
                 )
                 validateStructure(tokens, expectedStructure)
 
-                val (opList, nTokens) = parseOperandList(tokens.subList(expectedStructure.size, tokens.size))
+                val bitWidth = tokens[2].text.toInt()
+                val name = tokens[4].text
 
-                validateStructure(nTokens, listOf(TokenType.RIGHT_PAREN))
-                RegisterDeclExpression(tokens[2].text.toInt(), tokens[4].text, opList) to nTokens.subList(1, nTokens.size)
+                tokens.removeAmount(expectedStructure.size)
+                val opList = parseOperandList(tokens)
+
+                validateStructure(tokens, listOf(TokenType.RIGHT_PAREN))
+                tokens.removeAmount(1)
+
+                RegisterDeclExpression(bitWidth, name, opList)
             }
 
             // LVAL -> ID
             TokenType.IDENTIFIER -> {
-                val (op, nTokens) = parseOperand(tokens)
+                val op = parseOperand(tokens)
 
                 if (op !is LValExpression) {
                     unexpectedToken(tokens[0], TokenType.IDENTIFIER.text)
                     throw Exception()
                 }
 
-                op to nTokens
+                op
             }
 
             else -> {
@@ -196,17 +209,18 @@ class Parser(private val printer: PrettyPrinter) {
 
         // These decl expressions don't allow assignment, so just return them
         if (lVal is StatementExpression) {
-            return lVal as StatementExpression to currTokens
+            return lVal
         }
 
         // '=' RVAL
-        validateStructure(currTokens, listOf(TokenType.EQUALS))
-        val (rVal, remTokens) = parseRValExpression(currTokens.subList(1, currTokens.size))
+        validateStructure(tokens, listOf(TokenType.EQUALS))
+        tokens.removeAmount(1)
 
-        return AssignmentExpression(lVal, rVal) to remTokens
+        val rVal = parseRValExpression(tokens)
+        return AssignmentExpression(lVal, rVal)
     }
 
-    private fun parseSemiStatementList(tokens: List<Token>): Pair<List<StatementExpression>, List<Token>> {
+    private fun parseSemiStatementList(tokens: MutableList<Token>): List<StatementExpression> {
         if (tokens.isEmpty()) {
             unexpectedEOF(TokenType.RIGHT_BRACE)
         }
@@ -217,56 +231,62 @@ class Parser(private val printer: PrettyPrinter) {
 
         // SEMI-STMT-LIST -> ';' [FOLLOW(SEMI-STMT-LIST) = {'}'} => no more statements in the list]
         if (tokens[1].type == TokenType.RIGHT_BRACE) {
-            return emptyList<StatementExpression>() to tokens.subList(1, tokens.size)
+            tokens.removeAmount(1)
+            return emptyList()
         }
 
         // SEMI-STMT-LIST -> ';' STMT SEMI-STMT-LIST
-        val (arg, nTokens) = parseStatement(tokens.subList(1, tokens.size))
-        val (argList, remTokens) = parseSemiStatementList(nTokens)
-        return listOf(arg) + argList to remTokens
+        tokens.removeAmount(1)
+        val arg = parseStatement(tokens)
+
+        val argList = parseSemiStatementList(tokens)
+        return listOf(arg) + argList
     }
 
-    private fun parseOperandList(tokens: List<Token>): Pair<OperandListExpression, List<Token>> {
+    private fun parseOperandList(tokens: MutableList<Token>): OperandListExpression {
         if (tokens.isEmpty()) {
             unexpectedEOF(TokenType.RIGHT_PAREN)
         }
 
         // OP-LIST -> epsilon
         if (tokens[0].type == TokenType.RIGHT_PAREN) {
-            return OperandListExpression(emptyList()) to tokens
+            return OperandListExpression(emptyList())
         }
 
         // OP-LIST -> OP COMMA-OP-LIST
-        val (arg, nTokens) = parseOperand(tokens)
-        val (argList, remTokens) = parseCommaOpList(nTokens)
+        val arg = parseOperand(tokens)
+        val argList = parseCommaOpList(tokens)
 
-        return OperandListExpression(listOf(arg) + argList) to remTokens
+        return OperandListExpression(listOf(arg) + argList)
     }
 
-    private fun parseOperand(tokens: List<Token>): Pair<Operand, List<Token>> {
+    private fun parseOperand(tokens: MutableList<Token>): Operand {
         if (tokens.isEmpty()) {
             unexpectedEOF(TokenType.IDENTIFIER)
         }
 
         // OP -> ID | NUM
-        return when (tokens[0].type) {
-            TokenType.IDENTIFIER -> IdentifierOperand(tokens[0].text) to tokens.subList(1, tokens.size)
-            TokenType.NUM -> NumericalOperand(tokens[0].text.toInt()) to tokens.subList(1, tokens.size)
+        val op = when (tokens[0].type) {
+            TokenType.IDENTIFIER -> IdentifierOperand(tokens[0].text)
+            TokenType.NUM -> NumericalOperand(tokens[0].text.toInt())
             else -> {
                 unexpectedToken(tokens[0], or(TokenType.IDENTIFIER.text, TokenType.NUM.text))
                 throw Exception() // placate compiler
             }
         }
+
+        tokens.removeAmount(1)
+        return op
     }
 
-    private fun parseCommaOpList(tokens: List<Token>): Pair<List<Operand>, List<Token>> {
+    private fun parseCommaOpList(tokens: MutableList<Token>): List<Operand> {
         if (tokens.isEmpty()) {
             unexpectedEOF(TokenType.RIGHT_PAREN)
         }
 
         // COMMA-OP-LIST -> epsilon
         if (tokens[0].type == TokenType.RIGHT_PAREN) {
-            return emptyList<Operand>() to tokens
+            return emptyList()
         }
 
         // COMMA-OP-LIST -> ',' OP COMMA-OP-LIST
@@ -274,57 +294,64 @@ class Parser(private val printer: PrettyPrinter) {
             unexpectedToken(tokens[0], TokenType.COMMA.text)
         }
 
-        val (arg, nTokens) = parseOperand(tokens.subList(1, tokens.size))
-        val (argList, remTokens) = parseCommaOpList(nTokens)
-        return listOf(arg) + argList to remTokens
+        tokens.removeAmount(1)
+        val arg = parseOperand(tokens)
+        val argList = parseCommaOpList(tokens)
+        return listOf(arg) + argList
     }
 
-    private fun parseRValExpression(tokens: List<Token>): Pair<RValExpression, List<Token>> {
+    private fun parseRValExpression(tokens: MutableList<Token>): RValExpression {
         if (tokens.isEmpty()) {
             unexpectedEOF(TokenType.IDENTIFIER)
         }
 
         if (tokens[0].type == TokenType.NOT) {
             // RVAL -> NOT OP
-            val (op, nTokens) = parseOperand(tokens.subList(1, tokens.size))
-            return UnaryOpExpression(op, UnaryOp.NOT) to nTokens
+            tokens.removeAmount(1)
+            val op = parseOperand(tokens)
+            return UnaryOpExpression(op, UnaryOp.NOT)
         } else {
-            val (op, nTokens) = parseOperand(tokens)
+            val op = parseOperand(tokens)
 
-            if (nTokens.isEmpty()) {
+            if (tokens.isEmpty()) {
                 unexpectedEOF(TokenType.SEMICOLON)
             }
 
             // RVAL -> OP
-            if (nTokens[0].type == TokenType.SEMICOLON) {
-                return op to nTokens
+            if (tokens[0].type == TokenType.SEMICOLON) {
+                return op
             }
 
-            return when(nTokens[0].type) {
+            val tokType = tokens[0].type
+
+            return when(tokType) {
                 // RVAL -> OP BIN-OP OP; BIN-OP -> AND | OR | XOR
                 TokenType.AND, TokenType.OR, TokenType.XOR -> {
-                    val (rhs, remTokens) = parseOperand(nTokens.subList(1, nTokens.size))
-                    BinOpExpression(op, rhs, toBinOpType(nTokens[0].type)) to remTokens
+                    tokens.removeAmount(1)
+                    val rhs = parseOperand(tokens)
+                    BinOpExpression(op, rhs, toBinOpType(tokType))
                 }
 
                 // RVAL -> OP '?' OP ':' OP
                 TokenType.QUESTION -> {
-                    val (trueOp, remTokens) = parseOperand(nTokens.subList(1, nTokens.size))
+                    tokens.removeAmount(1)
+                    val trueOp = parseOperand(tokens)
 
-                    if (remTokens.isEmpty()) {
+                    if (tokens.isEmpty()) {
                         unexpectedEOF(TokenType.COLON)
                     }
 
-                    if (remTokens[0].type != TokenType.COLON) {
-                        unexpectedToken(remTokens[0], TokenType.COLON.text)
+                    if (tokens[0].type != TokenType.COLON) {
+                        unexpectedToken(tokens[0], TokenType.COLON.text)
                     }
 
-                    val (falseOp, remTokensLeft) = parseOperand(remTokens.subList(1, remTokens.size))
-                    TernaryOpExpression(op, trueOp, falseOp) to remTokensLeft
+                    tokens.removeAmount(1)
+                    val falseOp = parseOperand(tokens)
+                    TernaryOpExpression(op, trueOp, falseOp)
                 }
 
                 else -> {
-                    unexpectedToken(nTokens[0], or(TokenType.AND.text,
+                    unexpectedToken(tokens[0], or(TokenType.AND.text,
                         TokenType.OR.text, TokenType.XOR.text, TokenType.QUESTION.text, TokenType.SEMICOLON.text))
                     throw Exception() // placate compiler
                 }
@@ -338,6 +365,12 @@ class Parser(private val printer: PrettyPrinter) {
             TokenType.OR -> BinOp.OR
             TokenType.XOR -> BinOp.XOR
             else -> throw IllegalStateException("converting non-operator token to binary operator")
+        }
+    }
+
+    private fun MutableList<Token>.removeAmount(count: Int) {
+        (1..count).forEach { _ ->
+            this.removeFirst()
         }
     }
 
