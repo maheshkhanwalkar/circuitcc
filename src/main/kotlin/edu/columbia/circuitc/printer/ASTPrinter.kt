@@ -1,6 +1,7 @@
-package edu.columbia.circuitc.visitor
+package edu.columbia.circuitc.printer
 
 import edu.columbia.circuitc.parser.*
+import edu.columbia.circuitc.visitor.Visitor
 
 /**
  * AST Printer.

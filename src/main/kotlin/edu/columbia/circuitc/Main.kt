@@ -3,7 +3,7 @@ package edu.columbia.circuitc
 import edu.columbia.circuitc.lexer.Lexer
 import edu.columbia.circuitc.parser.Parser
 import edu.columbia.circuitc.printer.PrettyPrinter
-import edu.columbia.circuitc.visitor.printAST
+import edu.columbia.circuitc.printer.printAST
 import java.io.File
 
 fun main(args: Array<String>) {
