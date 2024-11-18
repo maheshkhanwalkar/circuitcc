@@ -7,16 +7,19 @@ package edu.columbia.circuitc.sym
  * the scope that keys belong to. Keys in outer scopes are still visible in inner scopes, but not
  * the other way round.
  *
- * **Limitation:** this implementation does not permit "shadowing" or redefinition of keys either in the
- * same scope or across scopes, as that makes bookkeeping and leaving a scope more complicated -- which
- * isn't needed for our use-case.
+ * This implementation also supports "shadowing" or key redefinition *across* scopes. When a key is
+ * defined within a scope, it will shadow the existing key in outer scopes. Therefore, calls to get() will
+ * return the inner-most-scope's value. When leaving a scope, then the current "shadowing" ends and future
+ * calls to get() will return the previous value prior to entering that scope. Shadowing can be nested
+ * which unwinds as we go back up to the default scope. One key restriction is that keys *cannot* be redefined
+ * within the same scope ("overwrite").
  */
 class SymbolTable<T> {
-    private val symbols = mutableMapOf<String, T>()
-    private val scopeStack = ArrayDeque<MutableList<String>>(listOf(mutableListOf()))
+    private val symbols = mutableMapOf<String, MutableList<T>>()
+    private val scopeStack = ArrayDeque<MutableSet<String>>(listOf(mutableSetOf()))
 
     fun enterScope() {
-        scopeStack.addFirst(mutableListOf())
+        scopeStack.addFirst(mutableSetOf())
     }
 
     fun leaveScope() {
@@ -25,20 +28,26 @@ class SymbolTable<T> {
         }
 
         scopeStack.removeFirst().forEach {
-            symbols.remove(it)
+            symbols[it]?.removeLast()
         }
     }
 
     fun put(symbol: String, value: T) {
-        if (symbols.contains(symbol)) {
-            throw IllegalArgumentException("cannot redefine symbol $symbol")
+        val currScope = scopeStack.first()
+
+        if (symbol in symbols) {
+            if (symbol in currScope) {
+                throw IllegalArgumentException("cannot redefine symbol $symbol, as it already exists in current scope")
+            }
+
+            symbols[symbol]?.add(value)
         }
 
-        symbols[symbol] = value
-        scopeStack.first().add(symbol)
+        symbols[symbol] = mutableListOf(value)
+        currScope.add(symbol)
     }
 
     fun get(symbol: String): T? {
-        return symbols[symbol]
+        return symbols[symbol]?.lastOrNull()
     }
 }
