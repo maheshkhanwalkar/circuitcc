@@ -1,16 +1,16 @@
 package edu.columbia.circuitc.parser
 
-import edu.columbia.circuitc.visitor.Visitor
+import edu.columbia.circuitc.visitor.ASTVisitor
 
 interface Expression {
-    fun <T> accept(visitor: Visitor<T>): T
+    fun <T> accept(visitor: ASTVisitor<T>): T
 }
 
 /**
  * Circuit expression, which is the top-level construct of the language.
  */
 data class CircuitExpression(val name: String, val args: ArgListExpression, val statements: StatementListExpression) : Expression {
-    override fun <T> accept(visitor: Visitor<T>): T {
+    override fun <T> accept(visitor: ASTVisitor<T>): T {
         return visitor.visit(this)
     }
 }
@@ -19,7 +19,7 @@ data class CircuitExpression(val name: String, val args: ArgListExpression, val 
  * Argument list expression.
  */
 data class ArgListExpression(val args: List<ArgumentExpression>) : Expression {
-    override fun <T> accept(visitor: Visitor<T>): T {
+    override fun <T> accept(visitor: ASTVisitor<T>): T {
         return visitor.visit(this)
     }
 }
@@ -28,7 +28,7 @@ data class ArgListExpression(val args: List<ArgumentExpression>) : Expression {
  * Argument expression.
  */
 data class ArgumentExpression(val bitWidth: Int, val name: String, val isInput: Boolean) : Expression {
-    override fun <T> accept(visitor: Visitor<T>): T {
+    override fun <T> accept(visitor: ASTVisitor<T>): T {
         return visitor.visit(this)
     }
 }
@@ -37,7 +37,7 @@ data class ArgumentExpression(val bitWidth: Int, val name: String, val isInput: 
  * Statement list expression.
  */
 data class StatementListExpression(val statements: List<StatementExpression>) : Expression {
-    override fun <T> accept(visitor: Visitor<T>): T {
+    override fun <T> accept(visitor: ASTVisitor<T>): T {
         return visitor.visit(this)
     }
 }
@@ -66,18 +66,18 @@ interface Operand: RValExpression
  * Operand list expression.
  */
 data class OperandListExpression(val operands: List<Operand>) : Expression {
-    override fun <T> accept(visitor: Visitor<T>): T {
+    override fun <T> accept(visitor: ASTVisitor<T>): T {
         return visitor.visit(this)
     }
 }
 
 data class NumericalOperand(val value: Int): Operand {
-    override fun <T> accept(visitor: Visitor<T>): T {
+    override fun <T> accept(visitor: ASTVisitor<T>): T {
         return visitor.visit(this)
     }
 }
 data class IdentifierOperand(val name: String): Operand, LValExpression {
-    override fun <T> accept(visitor: Visitor<T>): T {
+    override fun <T> accept(visitor: ASTVisitor<T>): T {
         return visitor.visit(this)
     }
 }
@@ -94,7 +94,7 @@ enum class BinOp {
  * Unary operand expression. OP RHS
  */
 data class UnaryOpExpression(val rhs: Operand, val type: UnaryOp): RValExpression {
-    override fun <T> accept(visitor: Visitor<T>): T {
+    override fun <T> accept(visitor: ASTVisitor<T>): T {
         return visitor.visit(this)
     }
 }
@@ -103,7 +103,7 @@ data class UnaryOpExpression(val rhs: Operand, val type: UnaryOp): RValExpressio
  * Binary operand expression. LHS OP RHS
  */
 data class BinOpExpression(val lhs: Operand, val rhs: Operand, val type: BinOp): RValExpression {
-    override fun <T> accept(visitor: Visitor<T>): T {
+    override fun <T> accept(visitor: ASTVisitor<T>): T {
         return visitor.visit(this)
     }
 }
@@ -112,7 +112,7 @@ data class BinOpExpression(val lhs: Operand, val rhs: Operand, val type: BinOp):
  * Ternary operand expression. COND ? TRUE-OP : FALSE-OP
  */
 data class TernaryOpExpression(val condition: Operand, val trueOp: Operand, val falseOp: Operand) : RValExpression {
-    override fun <T> accept(visitor: Visitor<T>): T {
+    override fun <T> accept(visitor: ASTVisitor<T>): T {
         return visitor.visit(this)
     }
 }
@@ -126,7 +126,7 @@ interface DeclExpression: LValExpression
  * Wire declaration expression.
  */
 data class WireDeclExpression(val bitWidth: Int, val name: String) : DeclExpression {
-    override fun <T> accept(visitor: Visitor<T>): T {
+    override fun <T> accept(visitor: ASTVisitor<T>): T {
         return visitor.visit(this)
     }
 }
@@ -135,7 +135,7 @@ data class WireDeclExpression(val bitWidth: Int, val name: String) : DeclExpress
  * Clock declaration expression.
  */
 data class ClockDeclExpression(val name: String) : DeclExpression, StatementExpression {
-    override fun <T> accept(visitor: Visitor<T>): T {
+    override fun <T> accept(visitor: ASTVisitor<T>): T {
         return visitor.visit(this)
     }
 }
@@ -144,7 +144,7 @@ data class ClockDeclExpression(val name: String) : DeclExpression, StatementExpr
  * Register declaration expression.
  */
 data class RegisterDeclExpression(val bitWidth: Int, val name: String, val params: OperandListExpression) : DeclExpression, StatementExpression {
-    override fun <T> accept(visitor: Visitor<T>): T {
+    override fun <T> accept(visitor: ASTVisitor<T>): T {
         return visitor.visit(this)
     }
 }
@@ -153,7 +153,7 @@ data class RegisterDeclExpression(val bitWidth: Int, val name: String, val param
  * Assignment expression. LVAL = RVAL
  */
 data class AssignmentExpression(val lVal: LValExpression, val rVal: RValExpression): StatementExpression {
-    override fun <T> accept(visitor: Visitor<T>): T {
+    override fun <T> accept(visitor: ASTVisitor<T>): T {
         return visitor.visit(this)
     }
 }

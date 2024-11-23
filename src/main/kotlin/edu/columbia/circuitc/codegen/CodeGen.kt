@@ -3,9 +3,9 @@ package edu.columbia.circuitc.codegen
 import edu.columbia.circuitc.ir.*
 import edu.columbia.circuitc.parser.*
 import edu.columbia.circuitc.sym.SymbolTable
-import edu.columbia.circuitc.visitor.Visitor
+import edu.columbia.circuitc.visitor.ASTVisitor
 
-class IRGen(private val symTable: SymbolTable<IRValue>): Visitor<IRValue> {
+class IRGen(private val symTable: SymbolTable<IRValue>): ASTVisitor<IRValue> {
     override fun visit(circuitExpression: CircuitExpression): IRValue {
         val name = circuitExpression.name
 

@@ -1,6 +1,5 @@
 package edu.columbia.circuitc
 
-import edu.columbia.circuitc.codegen.IRGen
 import edu.columbia.circuitc.codegen.generateIR
 import edu.columbia.circuitc.lexer.Lexer
 import edu.columbia.circuitc.parser.Parser

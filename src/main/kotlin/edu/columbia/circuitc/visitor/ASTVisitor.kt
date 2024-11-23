@@ -5,7 +5,7 @@ import edu.columbia.circuitc.parser.*
 /**
  * Visitor pattern.
  */
-interface Visitor<T> {
+interface ASTVisitor<T> {
     fun visit(circuitExpression: CircuitExpression): T
     fun visit(argListExpression: ArgListExpression): T
     fun visit(statementListExpression: StatementListExpression): T
