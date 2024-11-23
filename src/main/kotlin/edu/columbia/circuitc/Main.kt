@@ -1,6 +1,10 @@
 package edu.columbia.circuitc
 
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter
+import com.fasterxml.jackson.databind.ObjectMapper
 import edu.columbia.circuitc.codegen.generateIR
+import edu.columbia.circuitc.codegen.generateSIMCode
+import edu.columbia.circuitc.codegen.sim.SimCircuit
 import edu.columbia.circuitc.lexer.Lexer
 import edu.columbia.circuitc.parser.Parser
 import edu.columbia.circuitc.printer.PrettyPrinter
@@ -20,7 +24,10 @@ fun main(args: Array<String>) {
     printAST(ast)
 
     val ir = generateIR(ast)
-    println(ir)
+    val sim = generateSIMCode(ir)
+
+    val outputFile = getOutputFileName(args)
+    writeSIMOutput(sim, outputFile)
 }
 
 private fun readInputFile(args: Array<String>): String {
@@ -40,4 +47,15 @@ private fun getInputFile(args: Array<String>): String {
     }
 
     return fileName
+}
+
+private fun getOutputFileName(args: Array<String>): String {
+    val sourceFileName = args[0]
+    val pos = sourceFileName.indexOf(".circuit")
+    return sourceFileName.substring(0, pos) + ".sim"
+}
+
+private fun writeSIMOutput(sim: SimCircuit, outputFile: String) {
+    val mapper = ObjectMapper()
+    mapper.writer(DefaultPrettyPrinter()).writeValue(File(outputFile), sim)
 }

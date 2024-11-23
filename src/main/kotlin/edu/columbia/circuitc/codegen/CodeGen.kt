@@ -1,10 +1,20 @@
 package edu.columbia.circuitc.codegen
 
+import edu.columbia.circuitc.codegen.sim.SimCircuit
+import edu.columbia.circuitc.codegen.sim.SimConstruct
 import edu.columbia.circuitc.ir.*
 import edu.columbia.circuitc.parser.*
 import edu.columbia.circuitc.sym.SymbolTable
 import edu.columbia.circuitc.visitor.ASTVisitor
+import edu.columbia.circuitc.visitor.IRVisitor
 
+/**
+ * Intermediate Representation (IR) Generator.
+ *
+ * This class implements a pass over the AST, performing "instruction lowering" to generate IR
+ * to be used in later phases of the compiler. This IR is much closer to the actual circuit
+ * constructs that exist in the SIM language, which makes codegen phase easier.
+ */
 class IRGen(private val symTable: SymbolTable<IRValue>): ASTVisitor<IRValue> {
     override fun visit(circuitExpression: CircuitExpression): IRValue {
         val name = circuitExpression.name
@@ -138,6 +148,66 @@ class IRGen(private val symTable: SymbolTable<IRValue>): ASTVisitor<IRValue> {
     }
 }
 
+/**
+ * Code generation.
+ *
+ * This class implements a pass over the IR and generates SIM code (in object form) which can
+ * be serialized to disk (in JSON form).
+ */
+class CodeGen(private val symTable: SymbolTable<SimConstruct>): IRVisitor<SimConstruct> {
+    override fun visit(circuitValue: CircuitValue): SimConstruct {
+        TODO("Not yet implemented")
+    }
+
+    override fun visit(inputPinValue: InputPinValue): SimConstruct {
+        TODO("Not yet implemented")
+    }
+
+    override fun visit(outputPinValue: OutputPinValue): SimConstruct {
+        TODO("Not yet implemented")
+    }
+
+    override fun visit(registerValue: RegisterValue): SimConstruct {
+        TODO("Not yet implemented")
+    }
+
+    override fun visit(clkValue: ClockValue): SimConstruct {
+        TODO("Not yet implemented")
+    }
+
+    override fun visit(selectorValue: SelectorValue): SimConstruct {
+        TODO("Not yet implemented")
+    }
+
+    override fun visit(constantValue: ConstantValue): SimConstruct {
+        TODO("Not yet implemented")
+    }
+
+    override fun visit(tunnelValue: TunnelValue): SimConstruct {
+        TODO("Not yet implemented")
+    }
+
+    override fun visit(andGateValue: AndGateValue): SimConstruct {
+        TODO("Not yet implemented")
+    }
+
+    override fun visit(orGateValue: OrGateValue): SimConstruct {
+        TODO("Not yet implemented")
+    }
+
+    override fun visit(xorGateValue: XorGateValue): SimConstruct {
+        TODO("Not yet implemented")
+    }
+
+    override fun visit(notGateValue: NotGateValue): SimConstruct {
+        TODO("Not yet implemented")
+    }
+}
+
 fun generateIR(ast: Expression): IRValue {
     return ast.accept(IRGen(SymbolTable()))
+}
+
+fun generateSIMCode(ir: IRValue): SimCircuit {
+    TODO("Not yet implemented")
 }
