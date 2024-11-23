@@ -1,5 +1,7 @@
 package edu.columbia.circuitc
 
+import edu.columbia.circuitc.codegen.IRGen
+import edu.columbia.circuitc.codegen.generateIR
 import edu.columbia.circuitc.lexer.Lexer
 import edu.columbia.circuitc.parser.Parser
 import edu.columbia.circuitc.printer.PrettyPrinter
@@ -17,6 +19,9 @@ fun main(args: Array<String>) {
     val ast = parser.parse(tokens)
 
     printAST(ast)
+
+    val ir = generateIR(ast)
+    println(ir)
 }
 
 private fun readInputFile(args: Array<String>): String {
