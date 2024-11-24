@@ -7,6 +7,7 @@ import edu.columbia.circuitc.sym.SymbolTable
 import edu.columbia.circuitc.visitor.ASTVisitor
 import edu.columbia.circuitc.visitor.IRVisitor
 import kotlin.math.abs
+import kotlin.math.max
 
 /**
  * Intermediate Representation (IR) Generator.
@@ -191,7 +192,7 @@ class CodeGen(private val symTable: SymbolTable<SimConstruct>, private val build
             "Is input?" to "Yes",
             "Direction" to "EAST",
             "Bitsize" to inputPinValue.bitWidth.toString()
-        ), listOf(), listOf(WirePoint(pos.first + 2, pos.second + 1, PointOrientation.EAST)))
+        ), listOf(), listOf(WirePoint(pos.first + max(inputPinValue.bitWidth, 2), pos.second + 1, PointOrientation.EAST)))
 
         symTable.put(inputPinValue.pinName, inputPinComponent)
         constructs.add(inputPinComponent)
