@@ -248,16 +248,12 @@ class CodeGen(private val symTable: SymbolTable<SimConstruct>, private val build
 
         builder.connect(inComponent.outPosition[0], regComponent.inPositions[0])
         builder.connect(setBitComponent.outPosition[0], regComponent.inPositions[1])
-        builder.connect(clkComponent.outPosition[0],
-            WirePoint(regComponent.inPositions[2].x, regComponent.inPositions[2].y + 2, regComponent.inPositions[2].orientation))
-        builder.connect(regComponent.inPositions[2], WirePoint(regComponent.inPositions[2].x,
-            regComponent.inPositions[2].y + 2, regComponent.inPositions[2].orientation)
-        )
 
-        builder.connect(clearBitComponent.outPosition[0],  WirePoint(regComponent.inPositions[3].x, regComponent.inPositions[3].y + 1, regComponent.inPositions[3].orientation))
-        builder.connect(regComponent.inPositions[3], WirePoint(regComponent.inPositions[3].x,
-            regComponent.inPositions[3].y + 1, regComponent.inPositions[3].orientation)
-        )
+        builder.connect(clkComponent.outPosition[0], shiftBy(regComponent.inPositions[2], 0, 2))
+        builder.connect(regComponent.inPositions[2], shiftBy(regComponent.inPositions[2], 0, 2))
+
+        builder.connect(clearBitComponent.outPosition[0], shiftBy(regComponent.inPositions[3], 0, 1))
+        builder.connect(regComponent.inPositions[3], shiftBy(regComponent.inPositions[3], 0, 1))
 
         symTable.put(registerValue.regName, regComponent)
         constructs.add(regComponent)
@@ -447,10 +443,14 @@ class CodeGen(private val symTable: SymbolTable<SimConstruct>, private val build
     private fun getPos(): Pair<Int, Int> {
         val pos = xPos to yPos
 
-        xPos += 5
-        yPos += 5
+        xPos += 8
+        yPos += 8
 
         return pos
+    }
+
+    private fun shiftBy(point: WirePoint, xShift: Int, yShift: Int): WirePoint {
+        return WirePoint(point.x + xShift, point.y + yShift, point.orientation)
     }
 }
 
