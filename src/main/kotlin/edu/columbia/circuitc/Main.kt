@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import edu.columbia.circuitc.codegen.generateIR
 import edu.columbia.circuitc.codegen.generateSIMCode
 import edu.columbia.circuitc.codegen.sim.SimCircuit
+import edu.columbia.circuitc.codegen.sim.SimContainer
 import edu.columbia.circuitc.lexer.Lexer
 import edu.columbia.circuitc.parser.Parser
 import edu.columbia.circuitc.printer.PrettyPrinter
@@ -55,7 +56,7 @@ private fun getOutputFileName(args: Array<String>): String {
     return sourceFileName.substring(0, pos) + ".sim"
 }
 
-private fun writeSIMOutput(sim: SimCircuit, outputFile: String) {
+private fun writeSIMOutput(sim: SimContainer, outputFile: String) {
     val mapper = ObjectMapper()
     mapper.writer(DefaultPrettyPrinter()).writeValue(File(outputFile), sim)
 }

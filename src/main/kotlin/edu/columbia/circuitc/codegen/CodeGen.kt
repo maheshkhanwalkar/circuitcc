@@ -1,12 +1,13 @@
 package edu.columbia.circuitc.codegen
 
-import edu.columbia.circuitc.codegen.sim.SimCircuit
-import edu.columbia.circuitc.codegen.sim.SimConstruct
+import edu.columbia.circuitc.codegen.sim.*
 import edu.columbia.circuitc.ir.*
 import edu.columbia.circuitc.parser.*
 import edu.columbia.circuitc.sym.SymbolTable
 import edu.columbia.circuitc.visitor.ASTVisitor
 import edu.columbia.circuitc.visitor.IRVisitor
+import kotlin.math.abs
+import kotlin.math.min
 
 /**
  * Intermediate Representation (IR) Generator.
@@ -148,31 +149,117 @@ class IRGen(private val symTable: SymbolTable<IRValue>): ASTVisitor<IRValue> {
     }
 }
 
+private const val PIN_NAME = "com.ra4king.circuitsim.gui.peers.wiring.PinPeer"
+private const val TUNNEL_NAME = "com.ra4king.circuitsim.gui.peers.wiring.Tunnel"
+private const val CLOCK_NAME = "com.ra4king.circuitsim.gui.peers.wiring.ClockPeer"
+private const val REGISTER_NAME = "com.ra4king.circuitsim.gui.peers.memory.RegisterPeer"
+private const val CONSTANT_NAME = "com.ra4king.circuitsim.gui.peers.wiring.ConstantPeer"
+private const val AND_NAME = "com.ra4king.circuitsim.gui.peers.gates.AndGatePeer"
+private const val OR_NAME = "com.ra4king.circuitsim.gui.peers.gates.OrGatePeer"
+private const val XOR_NAME = "com.ra4king.circuitsim.gui.peers.gates.XorGatePeer"
+private const val NOT_NAME = "com.ra4king.circuitsim.gui.peers.gates.NotGatePeer"
+
 /**
  * Code generation.
  *
  * This class implements a pass over the IR and generates SIM code (in object form) which can
  * be serialized to disk (in JSON form).
  */
-class CodeGen(private val symTable: SymbolTable<SimConstruct>): IRVisitor<SimConstruct> {
+class CodeGen(private val symTable: SymbolTable<SimConstruct>, private val builder: WireBuilder): IRVisitor<SimConstruct> {
+    private val constructs = mutableListOf<SimConstruct>()
+
+    private var xPos = 10
+    private var yPos = 10
+
     override fun visit(circuitValue: CircuitValue): SimConstruct {
-        TODO("Not yet implemented")
+        circuitValue.values.map { it.accept(this) }
+        return SimContainer(listOf(SimCircuit(circuitValue.name, constructs, builder.wires)))
     }
 
     override fun visit(inputPinValue: InputPinValue): SimConstruct {
-        TODO("Not yet implemented")
+        val existing = symTable.get(inputPinValue.pinName)
+
+        if (existing != null) {
+            return existing
+        }
+
+        val pos = getPos()
+
+        val inputPinComponent = SimComponent(PIN_NAME, pos.first, pos.second, mapOf(
+            "Label location" to "WEST",
+            "Label" to inputPinValue.pinName,
+            "Is input?" to "Yes",
+            "Direction" to "EAST",
+            "Bitsize" to inputPinValue.bitWidth.toString()
+        ), listOf(), listOf(WirePoint(pos.first + 2, pos.second + 1, PointOrientation.EAST)))
+
+        symTable.put(inputPinValue.pinName, inputPinComponent)
+        constructs.add(inputPinComponent)
+
+        return inputPinComponent
     }
 
     override fun visit(outputPinValue: OutputPinValue): SimConstruct {
-        TODO("Not yet implemented")
+        val input = outputPinValue.outValue.accept(this)
+        val pos = getPos()
+
+        val outputPinComponent = SimComponent(PIN_NAME, pos.first, pos.second, mapOf(
+            "Label location" to "EAST",
+            "Label" to outputPinValue.pinName,
+            "Is input?" to "No",
+            "Direction" to "WEST",
+            "Bitsize" to outputPinValue.bitWidth.toString()
+        ), listOf(WirePoint(pos.first, pos.second + 1, PointOrientation.WEST)), listOf())
+
+        symTable.put(outputPinValue.pinName, outputPinComponent)
+        builder.connect((input as SimComponent).outPosition[0], outputPinComponent.inPositions[0])
+
+        constructs.add(outputPinComponent)
+        return outputPinComponent
     }
 
     override fun visit(registerValue: RegisterValue): SimConstruct {
-        TODO("Not yet implemented")
+        val existing = symTable.get(registerValue.regName)
+
+        if (existing != null) {
+            return existing
+        }
+
+        val clkComponent = registerValue.clk.accept(this)
+        val setBitComponent = registerValue.setBit.accept(this)
+        val clearBitComponent = registerValue.clearBit.accept(this)
+        val inComponent = registerValue.in0.accept(this)
+
+        // TODO -- need to connect the wiring
+        val pos = getPos()
+
+        val regComponent = SimComponent(REGISTER_NAME, pos.first, pos.second, mapOf(
+            "Label location" to "NORTH",
+            "Label" to registerValue.regName,
+            "Bitsize" to registerValue.bitWidth.toString()
+        ), listOf(), listOf())
+
+        symTable.put(registerValue.regName, regComponent)
+        return regComponent
     }
 
     override fun visit(clkValue: ClockValue): SimConstruct {
-        TODO("Not yet implemented")
+        val existing = symTable.get(clkValue.clkName)
+
+        if (existing != null) {
+            return existing
+        }
+
+        val pos = getPos()
+
+        val clkComponent = SimComponent(CLOCK_NAME, pos.first, pos.second, mapOf(
+            "Label location" to "NORTH",
+            "Label" to clkValue.clkName,
+            "Direction" to "EAST"
+        ), listOf(), listOf())
+
+        symTable.put(clkValue.clkName, clkComponent)
+        return clkComponent
     }
 
     override fun visit(selectorValue: SelectorValue): SimConstruct {
@@ -180,7 +267,19 @@ class CodeGen(private val symTable: SymbolTable<SimConstruct>): IRVisitor<SimCon
     }
 
     override fun visit(constantValue: ConstantValue): SimConstruct {
-        TODO("Not yet implemented")
+        val pos = getPos()
+
+        val constant = SimComponent(CONSTANT_NAME, pos.first, pos.second, mapOf(
+            "Label location" to "NORTH",
+            "Label" to "",
+            "Value" to constantValue.value.toString(),
+            "Direction" to "EAST",
+            "Bitsize" to constantValue.bitWidth.toString(),
+            "Base" to "BINARY"
+        ), listOf(), listOf(WirePoint(pos.first + 2, pos.second + 1, PointOrientation.EAST)))
+
+        constructs.add(constant)
+        return constant
     }
 
     override fun visit(tunnelValue: TunnelValue): SimConstruct {
@@ -188,19 +287,114 @@ class CodeGen(private val symTable: SymbolTable<SimConstruct>): IRVisitor<SimCon
     }
 
     override fun visit(andGateValue: AndGateValue): SimConstruct {
-        TODO("Not yet implemented")
+        val inA = andGateValue.inA.accept(this) as SimComponent
+        val inB = andGateValue.inB.accept(this) as SimComponent
+
+        val pos = getPos()
+        val andComponent = SimComponent(AND_NAME, pos.first, pos.second, mapOf(
+            "Negate 1" to "No",
+            "Label location" to "NORTH",
+            "Negate 0" to "No",
+            "Number of Inputs" to "2",
+            "Label" to "",
+            "Direction" to "EAST",
+            "Bitsize" to inA.properties["Bitsize"]!!
+        ), listOf(WirePoint(pos.first, pos.second + 1, PointOrientation.EAST), WirePoint(pos.first, pos.second + 3, PointOrientation.EAST)),
+            listOf(WirePoint(pos.first + 4, pos.second + 2, PointOrientation.EAST)))
+
+        builder.connect(inA.outPosition[0], andComponent.inPositions[0])
+        builder.connect(inB.outPosition[0], andComponent.inPositions[1])
+
+        constructs.add(andComponent)
+        return andComponent
     }
 
     override fun visit(orGateValue: OrGateValue): SimConstruct {
-        TODO("Not yet implemented")
+        val inA = orGateValue.inA.accept(this) as SimComponent
+        val inB = orGateValue.inB.accept(this) as SimComponent
+
+        val pos = getPos()
+        val orComponent = SimComponent(OR_NAME, pos.first, pos.second, mapOf(
+            "Negate 1" to "No",
+            "Label location" to "NORTH",
+            "Negate 0" to "No",
+            "Number of Inputs" to "2",
+            "Label" to "",
+            "Direction" to "EAST",
+            "Bitsize" to inA.properties["Bitsize"]!!
+        ), listOf(WirePoint(pos.first, pos.second + 1, PointOrientation.EAST), WirePoint(pos.first, pos.second + 3, PointOrientation.EAST)),
+            listOf(WirePoint(pos.first + 4, pos.second + 2, PointOrientation.EAST)))
+
+        builder.connect(inA.outPosition[0], orComponent.inPositions[0])
+        builder.connect(inB.outPosition[0], orComponent.inPositions[1])
+
+        constructs.add(orComponent)
+        return orComponent
     }
 
     override fun visit(xorGateValue: XorGateValue): SimConstruct {
-        TODO("Not yet implemented")
+        val inA = xorGateValue.inA.accept(this) as SimComponent
+        val inB = xorGateValue.inB.accept(this) as SimComponent
+
+        val pos = getPos()
+        val xorComponent = SimComponent(XOR_NAME, pos.first, pos.second, mapOf(
+            "Negate 1" to "No",
+            "Label location" to "NORTH",
+            "Negate 0" to "No",
+            "Number of Inputs" to "2",
+            "Label" to "",
+            "Direction" to "EAST",
+            "Bitsize" to inA.properties["Bitsize"]!!
+        ), listOf(WirePoint(pos.first, pos.second + 1, PointOrientation.EAST), WirePoint(pos.first, pos.second + 3, PointOrientation.EAST)),
+            listOf(WirePoint(pos.first + 4, pos.second + 2, PointOrientation.EAST)))
+
+        builder.connect(inA.outPosition[0], xorComponent.inPositions[0])
+        builder.connect(inB.outPosition[0], xorComponent.inPositions[1])
+
+        constructs.add(xorComponent)
+        return xorComponent
     }
 
     override fun visit(notGateValue: NotGateValue): SimConstruct {
-        TODO("Not yet implemented")
+        val inA = notGateValue.inA.accept(this) as SimComponent
+
+        val pos = getPos()
+        val notComponent = SimComponent(NOT_NAME, pos.first, pos.second, mapOf(
+            "Label location" to "NORTH",
+            "Label" to "",
+            "Direction" to "EAST",
+            "Bitsize" to inA.properties["Bitsize"]!!
+        ), listOf(WirePoint(pos.first, pos.second + 1, PointOrientation.EAST)),
+            listOf(WirePoint(pos.first + 3, pos.second + 1, PointOrientation.EAST)))
+
+        builder.connect(inA.outPosition[0], notComponent.inPositions[0])
+
+        constructs.add(notComponent)
+        return notComponent
+    }
+
+    private fun getPos(): Pair<Int, Int> {
+        val pos = xPos to yPos
+
+        xPos += 10
+        yPos += 10
+
+        return pos
+    }
+}
+
+class WireBuilder(val wires: MutableList<SimWire>) {
+    fun connect(source: WirePoint, sink: WirePoint) {
+        val xDist = abs(sink.x - source.x)
+        val yDist = abs(sink.y - source.y)
+
+        if (yDist != 0) {
+            wires.add(SimWire(source.x, source.y, yDist, false))
+        }
+
+        if (xDist != 0) {
+            wires.add(SimWire(source.x, sink.y, xDist, true))
+        }
     }
 }
 
@@ -208,6 +402,7 @@ fun generateIR(ast: Expression): IRValue {
     return ast.accept(IRGen(SymbolTable()))
 }
 
-fun generateSIMCode(ir: IRValue): SimCircuit {
-    TODO("Not yet implemented")
+fun generateSIMCode(ir: IRValue): SimContainer {
+    val construct = ir.accept(CodeGen(SymbolTable(), WireBuilder(mutableListOf())))
+    return construct as SimContainer
 }
