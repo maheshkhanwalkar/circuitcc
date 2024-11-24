@@ -6,9 +6,7 @@ import edu.columbia.circuitc.parser.*
 import edu.columbia.circuitc.sym.SymbolTable
 import edu.columbia.circuitc.visitor.ASTVisitor
 import edu.columbia.circuitc.visitor.IRVisitor
-import kotlin.math.E
 import kotlin.math.abs
-import kotlin.math.min
 
 /**
  * Intermediate Representation (IR) Generator.
@@ -227,10 +225,10 @@ class CodeGen(private val symTable: SymbolTable<SimConstruct>, private val build
             return existing
         }
 
-        val clkComponent = registerValue.clk.accept(this)
-        val setBitComponent = registerValue.setBit.accept(this)
-        val clearBitComponent = registerValue.clearBit.accept(this)
-        val inComponent = registerValue.in0.accept(this)
+        val clkComponent = registerValue.clk.accept(this) as SimComponent
+        val setBitComponent = registerValue.setBit.accept(this) as SimComponent
+        val clearBitComponent = registerValue.clearBit.accept(this) as SimComponent
+        val inComponent = registerValue.in0.accept(this) as SimComponent
 
         // TODO -- need to connect the wiring
         val pos = getPos()
@@ -239,9 +237,31 @@ class CodeGen(private val symTable: SymbolTable<SimConstruct>, private val build
             "Label location" to "NORTH",
             "Label" to registerValue.regName,
             "Bitsize" to registerValue.bitWidth.toString()
-        ), listOf(), listOf())
+        ), listOf(
+            WirePoint(pos.first, pos.second + 2, PointOrientation.EAST),
+            WirePoint(pos.first, pos.second + 3, PointOrientation.EAST),
+            WirePoint(pos.first + 1, pos.second + 4, PointOrientation.EAST),
+            WirePoint(pos.first + 3, pos.second + 4, PointOrientation.EAST)
+        ), listOf(
+            WirePoint(pos.first + 4, pos.second + 2, PointOrientation.EAST)
+        ))
+
+        builder.connect(inComponent.outPosition[0], regComponent.inPositions[0])
+        builder.connect(setBitComponent.outPosition[0], regComponent.inPositions[1])
+        builder.connect(clkComponent.outPosition[0],
+            WirePoint(regComponent.inPositions[2].x, regComponent.inPositions[2].y + 2, regComponent.inPositions[2].orientation))
+        builder.connect(regComponent.inPositions[2], WirePoint(regComponent.inPositions[2].x,
+            regComponent.inPositions[2].y + 2, regComponent.inPositions[2].orientation)
+        )
+
+        builder.connect(clearBitComponent.outPosition[0],  WirePoint(regComponent.inPositions[3].x, regComponent.inPositions[3].y + 1, regComponent.inPositions[3].orientation))
+        builder.connect(regComponent.inPositions[3], WirePoint(regComponent.inPositions[3].x,
+            regComponent.inPositions[3].y + 1, regComponent.inPositions[3].orientation)
+        )
 
         symTable.put(registerValue.regName, regComponent)
+        constructs.add(regComponent)
+
         return regComponent
     }
 
@@ -261,6 +281,8 @@ class CodeGen(private val symTable: SymbolTable<SimConstruct>, private val build
         ), listOf(), listOf(WirePoint(pos.first + 2, pos.second + 1, PointOrientation.EAST)))
 
         symTable.put(clkValue.clkName, clkComponent)
+        constructs.add(clkComponent)
+
         return clkComponent
     }
 
