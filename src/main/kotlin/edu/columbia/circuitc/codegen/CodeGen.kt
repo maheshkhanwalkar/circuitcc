@@ -6,6 +6,7 @@ import edu.columbia.circuitc.parser.*
 import edu.columbia.circuitc.sym.SymbolTable
 import edu.columbia.circuitc.visitor.ASTVisitor
 import edu.columbia.circuitc.visitor.IRVisitor
+import kotlin.math.E
 import kotlin.math.abs
 import kotlin.math.min
 
@@ -158,6 +159,7 @@ private const val AND_NAME = "com.ra4king.circuitsim.gui.peers.gates.AndGatePeer
 private const val OR_NAME = "com.ra4king.circuitsim.gui.peers.gates.OrGatePeer"
 private const val XOR_NAME = "com.ra4king.circuitsim.gui.peers.gates.XorGatePeer"
 private const val NOT_NAME = "com.ra4king.circuitsim.gui.peers.gates.NotGatePeer"
+private const val SELECTOR_NAME = "com.ra4king.circuitsim.gui.peers.plexers.MultiplexerPeer"
 
 /**
  * Code generation.
@@ -256,14 +258,40 @@ class CodeGen(private val symTable: SymbolTable<SimConstruct>, private val build
             "Label location" to "NORTH",
             "Label" to clkValue.clkName,
             "Direction" to "EAST"
-        ), listOf(), listOf())
+        ), listOf(), listOf(WirePoint(pos.first + 2, pos.second + 1, PointOrientation.EAST)))
 
         symTable.put(clkValue.clkName, clkComponent)
         return clkComponent
     }
 
     override fun visit(selectorValue: SelectorValue): SimConstruct {
-        TODO("Not yet implemented")
+        val pos = getPos()
+
+        val in0 = selectorValue.in0.accept(this) as SimComponent
+        val in1 = selectorValue.in1.accept(this) as SimComponent
+        val sel = selectorValue.sel.accept(this) as SimComponent
+
+        val selectorComponent = SimComponent(SELECTOR_NAME, pos.first, pos.second, mapOf(
+            "Selector location" to "Right/Down",
+            "Label location" to "NORTH",
+            "Selector bits" to "1",
+            "Label" to "",
+            "Direction" to "EAST",
+            "Bitsize" to in0.properties["Bitsize"]!!
+        ), listOf(
+            WirePoint(pos.first, pos.second + 1, PointOrientation.EAST),
+            WirePoint(pos.first, pos.second + 2, PointOrientation.EAST),
+            WirePoint(pos.first + 1, pos.second + 4, PointOrientation.EAST),
+        ), listOf(
+            WirePoint(pos.first + 3, pos.second + 2, PointOrientation.EAST),
+        ))
+
+        builder.connect(in0.outPosition[0], selectorComponent.inPositions[1])
+        builder.connect(in1.outPosition[0], selectorComponent.inPositions[0])
+        builder.connect(sel.outPosition[0], selectorComponent.inPositions[2])
+
+        constructs.add(selectorComponent)
+        return selectorComponent
     }
 
     override fun visit(constantValue: ConstantValue): SimConstruct {
@@ -397,8 +425,8 @@ class CodeGen(private val symTable: SymbolTable<SimConstruct>, private val build
     private fun getPos(): Pair<Int, Int> {
         val pos = xPos to yPos
 
-        xPos += 10
-        yPos += 10
+        xPos += 5
+        yPos += 5
 
         return pos
     }
