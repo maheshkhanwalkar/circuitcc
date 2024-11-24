@@ -283,7 +283,28 @@ class CodeGen(private val symTable: SymbolTable<SimConstruct>, private val build
     }
 
     override fun visit(tunnelValue: TunnelValue): SimConstruct {
-        TODO("Not yet implemented")
+        val existing = symTable.get(tunnelValue.tunnelName)
+
+        if (existing != null) {
+            return existing
+        }
+
+        val input = tunnelValue.inValue.accept(this)
+        val pos = getPos()
+
+        val tunnelComponent = SimComponent(TUNNEL_NAME, pos.first, pos.second, mapOf(
+            "Label location" to "EAST",
+            "Label" to tunnelValue.tunnelName,
+            "Direction" to "WEST",
+            "Bitsize" to tunnelValue.bitWidth.toString()
+        ), listOf(WirePoint(pos.first, pos.second + 1, PointOrientation.WEST)),
+            listOf(WirePoint(pos.first, pos.second + 1, PointOrientation.WEST)))
+
+        symTable.put(tunnelValue.tunnelName, tunnelComponent)
+        builder.connect((input as SimComponent).outPosition[0], tunnelComponent.inPositions[0])
+
+        constructs.add(tunnelComponent)
+        return tunnelComponent
     }
 
     override fun visit(andGateValue: AndGateValue): SimConstruct {
