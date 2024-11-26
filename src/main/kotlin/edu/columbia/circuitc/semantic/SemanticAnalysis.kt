@@ -1,0 +1,162 @@
+package edu.columbia.circuitc.semantic
+
+import edu.columbia.circuitc.parser.*
+import edu.columbia.circuitc.sym.SymbolTable
+import edu.columbia.circuitc.visitor.ASTVisitor
+import kotlin.math.floor
+import kotlin.math.log
+import kotlin.math.max
+
+/**
+ * Bit-width representation.
+ *
+ * @param width bit width
+ * @param adjustable whether the width is flexible -- it can change according to some target.
+ */
+data class BitWidth(val width: Int, val adjustable: Boolean)
+
+private val DummyBitWidth = BitWidth(0, false)
+
+/**
+ * Bit-width verification.
+ *
+ * Ensure that bit-widths match for assignments and that constant values can be encoded within
+ * the specified bit-width that is inferred.
+ */
+class BitWidthVerification: ASTVisitor<BitWidth> {
+    var successful = true
+    private set
+
+    private val symTable: SymbolTable<BitWidth> = SymbolTable()
+
+    override fun visit(circuitExpression: CircuitExpression): BitWidth {
+        circuitExpression.args.accept(this)
+        circuitExpression.statements.accept(this)
+        return DummyBitWidth
+    }
+
+    override fun visit(argListExpression: ArgListExpression): BitWidth {
+        argListExpression.args.forEach { it.accept(this) }
+        return DummyBitWidth
+    }
+
+    override fun visit(statementListExpression: StatementListExpression): BitWidth {
+        statementListExpression.statements.forEach { it.accept(this) }
+        return DummyBitWidth
+    }
+
+    override fun visit(argumentExpression: ArgumentExpression): BitWidth {
+        val bitWidth = BitWidth(argumentExpression.bitWidth, false)
+        symTable.put(argumentExpression.name, bitWidth)
+        return bitWidth
+    }
+
+    override fun visit(clockDeclExpression: ClockDeclExpression): BitWidth {
+        return DummyBitWidth
+    }
+
+    override fun visit(assignmentExpression: AssignmentExpression): BitWidth {
+        val lValWidth = assignmentExpression.lVal.accept(this)
+        val rValWidth = assignmentExpression.rVal.accept(this)
+
+        // Widths need to match or rValWidth is < lValWidth and is adjustable
+        if (lValWidth != rValWidth && (!rValWidth.adjustable || rValWidth.width > lValWidth.width)) {
+            println("error. bit-width mismatch")
+            successful = false
+            return DummyBitWidth
+        }
+
+        return lValWidth
+    }
+
+    override fun visit(registerDeclExpression: RegisterDeclExpression): BitWidth {
+        val bitWidth = BitWidth(registerDeclExpression.bitWidth, false)
+        symTable.put(registerDeclExpression.name, bitWidth)
+        return bitWidth
+    }
+
+    override fun visit(wireDeclExpression: WireDeclExpression): BitWidth {
+        val bitWidth = BitWidth(wireDeclExpression.bitWidth, false)
+        symTable.put(wireDeclExpression.name, bitWidth)
+        return bitWidth
+    }
+
+    override fun visit(unaryOpExpression: UnaryOpExpression): BitWidth {
+        return unaryOpExpression.rhs.accept(this)
+    }
+
+    override fun visit(binOpExpression: BinOpExpression): BitWidth {
+        val lhsWidth = binOpExpression.lhs.accept(this)
+        val rhsWidth = binOpExpression.rhs.accept(this)
+
+        return binaryWidthComparison(lhsWidth, rhsWidth)
+    }
+
+    override fun visit(ternaryOpExpression: TernaryOpExpression): BitWidth {
+        val trueOpWidth = ternaryOpExpression.trueOp.accept(this)
+        val falseOpWidth = ternaryOpExpression.falseOp.accept(this)
+        val condWidth = ternaryOpExpression.condition.accept(this)
+
+        if (condWidth.width != 1) {
+            println("error. ternary condition should be 1-bit wide")
+            successful = false
+            return DummyBitWidth
+        }
+
+        return binaryWidthComparison(trueOpWidth, falseOpWidth)
+    }
+
+    override fun visit(numericalOperand: NumericalOperand): BitWidth {
+        // Numerical operands' width can be adjusted upwards
+        if (numericalOperand.value == 0) {
+            return BitWidth(1, true)
+        }
+
+        val minWidth = (floor(log(numericalOperand.value.toDouble(), 2.0)) + 1).toInt()
+        return BitWidth(minWidth, true)
+    }
+
+    override fun visit(identifierOperand: IdentifierOperand): BitWidth {
+        val existing = symTable.get(identifierOperand.name)
+
+        if (existing != null) {
+            return existing
+        }
+
+        println("error: undefined identifier: ${identifierOperand.name}")
+        successful = false
+        return DummyBitWidth
+    }
+
+    override fun visit(operandListExpression: OperandListExpression): BitWidth {
+        return DummyBitWidth
+    }
+
+    private fun binaryWidthComparison(lhsWidth: BitWidth, rhsWidth: BitWidth): BitWidth {
+        if (lhsWidth != rhsWidth) {
+            if (lhsWidth.adjustable && rhsWidth.adjustable) {
+                return BitWidth(max(lhsWidth.width, rhsWidth.width), true)
+            }
+
+            if (lhsWidth.adjustable && lhsWidth.width < rhsWidth.width) {
+                return rhsWidth
+            }
+
+            if (rhsWidth.adjustable && rhsWidth.width < lhsWidth.width) {
+                return lhsWidth
+            }
+
+            println("error. bit-width mismatch")
+            successful = false
+            return DummyBitWidth
+        } else {
+            return lhsWidth
+        }
+    }
+}
+
+fun performSemanticAnalysis(ast: Expression): Boolean {
+    val bitWidthVerification = BitWidthVerification()
+    ast.accept(bitWidthVerification)
+    return bitWidthVerification.successful
+}

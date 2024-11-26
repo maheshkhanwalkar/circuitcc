@@ -8,8 +8,9 @@ import edu.columbia.circuitc.codegen.sim.SimContainer
 import edu.columbia.circuitc.lexer.Lexer
 import edu.columbia.circuitc.parser.Parser
 import edu.columbia.circuitc.printer.PrettyPrinter
-import edu.columbia.circuitc.printer.printAST
+import edu.columbia.circuitc.semantic.performSemanticAnalysis
 import java.io.File
+import kotlin.system.exitProcess
 
 fun main(args: Array<String>) {
     val content = readInputFile(args)
@@ -21,7 +22,9 @@ fun main(args: Array<String>) {
     val parser = Parser(printer)
     val ast = parser.parse(tokens)
 
-    printAST(ast)
+    if (!performSemanticAnalysis(ast)) {
+        exitProcess(0)
+    }
 
     val ir = generateIR(ast)
     val sim = generateSIMCode(ir)
