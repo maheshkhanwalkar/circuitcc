@@ -155,7 +155,91 @@ class BitWidthVerification: ASTVisitor<BitWidth> {
     }
 }
 
+/**
+ * Duplicate declaration verification.
+ *
+ * Validate that there are no duplicate declarations of variables within the AST,
+ * which is a semantic error.
+ */
+class DuplicateDeclarationVerification: ASTVisitor<Unit> {
+    private val symTable = SymbolTable<Expression>()
+
+    var successful = true
+    private set
+
+    override fun visit(circuitExpression: CircuitExpression) {
+        circuitExpression.args.accept(this)
+        circuitExpression.statements.accept(this)
+    }
+
+    override fun visit(argListExpression: ArgListExpression) {
+        argListExpression.args.forEach { it.accept(this) }
+    }
+
+    override fun visit(statementListExpression: StatementListExpression) {
+        statementListExpression.statements.forEach { it.accept(this) }
+    }
+
+    override fun visit(argumentExpression: ArgumentExpression) {
+        checkExisting(argumentExpression.name, argumentExpression)
+    }
+
+    override fun visit(clockDeclExpression: ClockDeclExpression) {
+       checkExisting(clockDeclExpression.name, clockDeclExpression)
+    }
+
+    override fun visit(assignmentExpression: AssignmentExpression) {
+        assignmentExpression.lVal.accept(this)
+        assignmentExpression.rVal.accept(this)
+    }
+
+    override fun visit(registerDeclExpression: RegisterDeclExpression) {
+        checkExisting(registerDeclExpression.name, registerDeclExpression)
+    }
+
+    override fun visit(wireDeclExpression: WireDeclExpression) {
+        checkExisting(wireDeclExpression.name, wireDeclExpression)
+    }
+
+    override fun visit(unaryOpExpression: UnaryOpExpression) {
+        unaryOpExpression.rhs.accept(this)
+    }
+
+    override fun visit(binOpExpression: BinOpExpression) {
+        binOpExpression.lhs.accept(this)
+        binOpExpression.rhs.accept(this)
+    }
+
+    override fun visit(ternaryOpExpression: TernaryOpExpression) {
+        ternaryOpExpression.trueOp.accept(this)
+        ternaryOpExpression.falseOp.accept(this)
+        ternaryOpExpression.condition.accept(this)
+    }
+
+    override fun visit(numericalOperand: NumericalOperand) { }
+    override fun visit(identifierOperand: IdentifierOperand) { }
+    override fun visit(operandListExpression: OperandListExpression) { }
+
+    private fun checkExisting(name: String, expression: Expression) {
+        val existing = symTable.get(name)
+
+        if (existing != null) {
+            println("error. redefinition of '$name' found")
+            successful = false
+            return
+        }
+
+        symTable.put(name, expression)
+    }
+}
+
 fun performSemanticAnalysis(ast: Expression): Boolean {
+    val duplicateDeclarationVerification = DuplicateDeclarationVerification()
+    ast.accept(duplicateDeclarationVerification)
+    if (!duplicateDeclarationVerification.successful) {
+        return false
+    }
+
     val bitWidthVerification = BitWidthVerification()
     ast.accept(bitWidthVerification)
     return bitWidthVerification.successful
