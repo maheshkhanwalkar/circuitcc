@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.util.DefaultPrettyPrinter
 import com.fasterxml.jackson.databind.ObjectMapper
 import edu.columbia.circuitc.codegen.generateIR
 import edu.columbia.circuitc.codegen.generateSIMCode
-import edu.columbia.circuitc.codegen.sim.SimCircuit
 import edu.columbia.circuitc.codegen.sim.SimContainer
 import edu.columbia.circuitc.lexer.Lexer
 import edu.columbia.circuitc.parser.Parser

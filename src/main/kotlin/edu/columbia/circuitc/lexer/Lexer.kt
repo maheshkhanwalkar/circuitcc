@@ -7,9 +7,9 @@ class Lexer {
     private val stateMachines: List<DFA> = listOf(
         // Keywords
         DFALoader.get("and")  { text, start, end -> Token(TokenType.AND, text, start, end) },
+        DFALoader.get("xor")  { text, start, end -> Token(TokenType.XOR, text, start, end) },
         DFALoader.get("or")   { text, start, end -> Token(TokenType.OR, text, start, end)  },
         DFALoader.get("not")  { text, start, end -> Token(TokenType.NOT, text, start, end) },
-        DFALoader.get("xor")  { text, start, end -> Token(TokenType.XOR, text, start, end) },
         DFALoader.get("in")   { text, start, end -> Token(TokenType.IN, text, start, end)  },
         DFALoader.get("out")  { text, start, end -> Token(TokenType.OUT, text, start, end) },
         DFALoader.get("bits") { text, start, end -> Token(TokenType.BITS, text, start, end) },
