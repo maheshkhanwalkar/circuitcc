@@ -43,3 +43,4 @@ bin/
 
 ### CircuitC files ###
 *.circuit
+*.sim

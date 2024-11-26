@@ -2,82 +2,50 @@
 
 #### Author: Mahesh Khanwalkar (mk4548)
 
-## Grammar
+## Code Generation Implementation
 
-The following productions represent the grammar of the CircuitC language.
+The code generation phase is implemented in two steps. The input into the code generation phase is the abstract syntax
+tree (AST) generated from the parsing phase. This AST is traversed to generate an intermediate representation (IR). Then,
+the IR is traversed to generate the .sim language.
 
-```
-PROG -> CIRCUIT ID '(' ARG-LIST ')' '{' STMT-LIST '}'
-ARG-LIST -> ARG COMMA-ARG-LIST | epsilon
-ARG -> IN BITS '<' NUM '>' ID | OUT BITS '<' NUM '>' ID
-COMMA-ARG-LIST -> ',' ARG COMMA-ARG-LIST | epsilon
-STMT-LIST -> STMT SEMI-STMT-LIST | epsilon
-STMT -> LVAL | LVAL '=' RVAL
-LVAL -> BITS '<' NUM '>' ID | CLOCK ID | REGISTER '<' NUM '>' ID '(' OP-LIST ')' | ID
-SEMI-STMT-LIST -> ';' | ';' STMT SEMI-STMT-LIST
-OP-LIST -> OP COMMA-OP-LIST | epsilon
-OP -> ID | NUM
-COMMA-OP-LIST -> ',' OP COMMA-OP-LIST | epsilon
-RVAL -> NOT OP | OP | OP BIN-OP OP | OP '?' OP ':' OP
-BIN-OP -> AND | OR | XOR
-```
+### Symbol Table implementation
 
-The terminals in the grammar are:
-1. Anything in single-quotes
-2. CIRCUIT, ID, NUM, IN, OUT, BITS, CLOCK, REGISTER, NOT, AND, OR, XOR
+Both the IR and SIM code generation phases rely on a symbol table implemented in `SymbolTable.kt` which keeps track of
+symbols already seen. This allows the traversals to reference previously generated constructs by name. The implementation
+also handles scoping and variable shadowing across scopes -- although for our purposes, this isn't strictly necessary as
+we don't have multiple levels of scoping in the language.
 
-Everything else is a non-terminal in the grammar.
+### Intermediate Representation (IR) Generation
 
-## Parser Implementation
+The AST generated during parsing is still "high-level", so we take an intermediate step to lower the representation into
+IR, which makes the final codegen step easier. For example, in the AST, there is a binary operand expression. This is
+a high-level construct -- which in the IR will be directly mapped to the corresponding logical gate. So, if it is a
+binary operand expression with an 'and', then it becomes an AndGateValue in the IR. When we get to the SIM code gen
+step, then this AndGateValue directly becomes an AND gate.
 
-### Parsing Algorithm
-The parser for this grammar is a recursive descent parser implemented in `Parser.kt`. Each non-terminal has its own
-parse method which processes the tokens in the list, calls any other methods to process non-terminals in the current
-production, and returns a AST node. The resulting AST nodes (leafs and intermediate nodes) are combined to form the
-AST for the entire source file.
+The IR generation is implemented in `CodeGen.kt` in the `IRGen` class using the visitor pattern
+over the AST. The IR constructs are defined within `IR.kt` and are much closer to the actual SIM language constructs.
 
-### AST Node Definitions
-The "nodes" within the AST are defined within `Expression.kt` in the `parser` package. Each concrete class implements
-the `Expression` interface, which acts as the generic AST node type.
+### SIM Code Generation
 
-### Error Handling
-Error handling is a fail-fast approach where the first error encountered is reported. Since we keep track of token
-positions, which was done during lexical analysis, the error messages directly describe and print out where the error
-in the program is, which makes it easy for the user to locate and fix it.
+Once we have the IR generated, we then perform a pass over the IR to generate the SIM code. This is also done using
+a visitor pattern, albeit with the `IRVisitor` interface (rather than the `ASTVisitor`). The SIM language constructs
+are defined within `Construct.kt` under the `edu.columbia.circuitc.sim` package. These can be directly serialized into
+JSON output to create the final .sim file.
 
-For example, if the program uses a keyword in an assignment (not allowed),
-then this would be how the error message would look like:
+The interesting challenge here is the placement and wiring of components together. Since the .sim language is used in
+a visual tool, the components have an (x, y) position and wiring connecting them. The code generation uses a simple
+placement heuristic to space out the components and determines the wiring (multiple wires can be required) to connect
+the components together. To space out the components, we start off in the top-left corner and move towards the
+bottom-right corner, which prevents the situation of wires merging together (causing a short-circuit) when connecting
+components together.
 
-```
-example.circuit:2:14 error: unexpected token 'circuit', expected: 'identifier', or 'number'
-    output = circuit;
-             ^~~~~~~
-```
-
-It prints out:
-1. The file name and row:column position of the error
-2. What the error is and the expected value
-3. The entire line where the error occurred and highlighting of the unexpected token.
-
-This type of verbose error messaging used by this compiler comes from inspiration from how the Clang C compiler
-prints out error messages.
-
-### Orchestration
-The lexical analysis and parsing phases are joined together in `Main.kt` which first calls the lexical analysis method
-which returns a list of tokens. That list is then passed as input to the parsing method, which returns the constructed
-AST.
-
-### AST Output Printing
-To print the constructed AST to console output, `Main.kt` calls the `printAST` method which is defined within the
-`ASTPrinter.kt` file in the `visitor` package.
-
-This method will print out the AST with a tree-formatting to the console. It leverages the **visitor design pattern**
-to visit all the nodes in the AST and print out the relevant information.
-
-The visitor interface is defined within `Visitor.kt` which defines a `visit` method for each concrete type of node within
-the AST. The `ASTPrinter` class then implements the `Visitor` interface with the functionality of printing the node's
-information. The purpose of creating this visitor interface and pattern is to be forward-looking, since this can be
-used during the type-checking (semantic analysis) and code generation phases.
+The (x, y) position of the component represents the top-level corner of the component itself but
+not where the pins are on the component. For each component (input pin, output pin, register, etc.), we translate the
+(x, y) position to the location of the input pin(s) and the output pin and store that in the generated `SimComponent`.
+Wiring is handled by the `WireBuilder` class in `CodeGen.kt` file. Given a source point and a sink point, it computes
+what wiring (horizontal and vertical) is needed to connect those two points. These source and sink points are exactly
+what was computed as the location of input and output pins.
 
 ## Installation Steps and Running
 To build and run the sample programs (described below), there is a provided Dockerfile which will set up a container with JDK 17 installed and run the execute.sh script which runs all the sample programs.
@@ -116,47 +84,172 @@ This is a circuit which implements a NAND logical gate. To add some complexity, 
 inputs as (NOT A) OR (NOT B) which is derived from De Morgan's Law.
 
 ```
-CircuitExpression
-|__ name: nandGate
-|__ args: ArgumentListExpression
-    |__ arg0: Argument
-        |__ type: INPUT
-        |__ name: a
-        |__ 1 bits wide
-    |__ arg1: Argument
-        |__ type: INPUT
-        |__ name: b
-        |__ 1 bits wide
-    |__ arg2: Argument
-        |__ type: OUTPUT
-        |__ name: output
-        |__ 1 bits wide
-|__ statements: StatementListExpression
-    |__ statement0: AssignmentExpression
-        |__ lhs: WireDeclExpression
-            |__ name: na
-            |__ 1 bits wide
-        |__ rhs: UnaryOpExpression
-            |__ op: NOT
-            |__ rhs: IdentifierOperand
-                |__ ID(a)
-    |__ statement1: AssignmentExpression
-        |__ lhs: WireDeclExpression
-            |__ name: nb
-            |__ 1 bits wide
-        |__ rhs: UnaryOpExpression
-            |__ op: NOT
-            |__ rhs: IdentifierOperand
-                |__ ID(b)
-    |__ statement2: AssignmentExpression
-        |__ lhs: IdentifierOperand
-            |__ ID(output)
-        |__ rhs: BinOpExpression
-            |__ op: OR
-            |__ lhs: IdentifierOperand
-                |__ ID(na)
-            |__ rhs: IdentifierOperand
-                |__ ID(nb)
+{
+  "circuits" : [ {
+    "name" : "nandGate",
+    "components" : [ {
+      "name" : "com.ra4king.circuitsim.gui.peers.wiring.PinPeer",
+      "x" : 10,
+      "y" : 10,
+      "properties" : {
+        "Label location" : "WEST",
+        "Label" : "a",
+        "Is input?" : "Yes",
+        "Direction" : "EAST",
+        "Bitsize" : "1"
+      }
+    }, {
+      "name" : "com.ra4king.circuitsim.gui.peers.wiring.PinPeer",
+      "x" : 18,
+      "y" : 18,
+      "properties" : {
+        "Label location" : "WEST",
+        "Label" : "b",
+        "Is input?" : "Yes",
+        "Direction" : "EAST",
+        "Bitsize" : "1"
+      }
+    }, {
+      "name" : "com.ra4king.circuitsim.gui.peers.gates.NotGatePeer",
+      "x" : 26,
+      "y" : 26,
+      "properties" : {
+        "Label location" : "NORTH",
+        "Label" : "",
+        "Direction" : "EAST",
+        "Bitsize" : "1"
+      }
+    }, {
+      "name" : "com.ra4king.circuitsim.gui.peers.wiring.Tunnel",
+      "x" : 34,
+      "y" : 34,
+      "properties" : {
+        "Label location" : "EAST",
+        "Label" : "na",
+        "Direction" : "WEST",
+        "Bitsize" : "1"
+      }
+    }, {
+      "name" : "com.ra4king.circuitsim.gui.peers.gates.NotGatePeer",
+      "x" : 42,
+      "y" : 42,
+      "properties" : {
+        "Label location" : "NORTH",
+        "Label" : "",
+        "Direction" : "EAST",
+        "Bitsize" : "1"
+      }
+    }, {
+      "name" : "com.ra4king.circuitsim.gui.peers.wiring.Tunnel",
+      "x" : 50,
+      "y" : 50,
+      "properties" : {
+        "Label location" : "EAST",
+        "Label" : "nb",
+        "Direction" : "WEST",
+        "Bitsize" : "1"
+      }
+    }, {
+      "name" : "com.ra4king.circuitsim.gui.peers.gates.OrGatePeer",
+      "x" : 58,
+      "y" : 58,
+      "properties" : {
+        "Negate 1" : "No",
+        "Label location" : "NORTH",
+        "Negate 0" : "No",
+        "Number of Inputs" : "2",
+        "Label" : "",
+        "Direction" : "EAST",
+        "Bitsize" : "1"
+      }
+    }, {
+      "name" : "com.ra4king.circuitsim.gui.peers.wiring.PinPeer",
+      "x" : 66,
+      "y" : 66,
+      "properties" : {
+        "Label location" : "EAST",
+        "Label" : "output",
+        "Is input?" : "No",
+        "Direction" : "WEST",
+        "Bitsize" : "1"
+      }
+    } ],
+    "wires" : [ {
+      "x" : 12,
+      "y" : 11,
+      "length" : 16,
+      "isHorizontal" : false
+    }, {
+      "x" : 12,
+      "y" : 27,
+      "length" : 14,
+      "isHorizontal" : true
+    }, {
+      "x" : 29,
+      "y" : 27,
+      "length" : 8,
+      "isHorizontal" : false
+    }, {
+      "x" : 29,
+      "y" : 35,
+      "length" : 5,
+      "isHorizontal" : true
+    }, {
+      "x" : 20,
+      "y" : 19,
+      "length" : 24,
+      "isHorizontal" : false
+    }, {
+      "x" : 20,
+      "y" : 43,
+      "length" : 22,
+      "isHorizontal" : true
+    }, {
+      "x" : 45,
+      "y" : 43,
+      "length" : 8,
+      "isHorizontal" : false
+    }, {
+      "x" : 45,
+      "y" : 51,
+      "length" : 5,
+      "isHorizontal" : true
+    }, {
+      "x" : 34,
+      "y" : 35,
+      "length" : 24,
+      "isHorizontal" : false
+    }, {
+      "x" : 34,
+      "y" : 59,
+      "length" : 24,
+      "isHorizontal" : true
+    }, {
+      "x" : 50,
+      "y" : 51,
+      "length" : 10,
+      "isHorizontal" : false
+    }, {
+      "x" : 50,
+      "y" : 61,
+      "length" : 8,
+      "isHorizontal" : true
+    }, {
+      "x" : 62,
+      "y" : 60,
+      "length" : 7,
+      "isHorizontal" : false
+    }, {
+      "x" : 62,
+      "y" : 67,
+      "length" : 4,
+      "isHorizontal" : true
+    } ]
+  } ],
+  "version" : "1.9.2b",
+  "globalBitSize" : 1,
+  "clockSpeed" : 1
+}
 ```
 
 ### orGate.circuit
@@ -164,31 +257,92 @@ CircuitExpression
 A very basic circuit which uses the 'or' key word to create an or gate circuit
 
 ```
-CircuitExpression
-|__ name: basicOrGate
-|__ args: ArgumentListExpression
-    |__ arg0: Argument
-        |__ type: INPUT
-        |__ name: a
-        |__ 1 bits wide
-    |__ arg1: Argument
-        |__ type: INPUT
-        |__ name: b
-        |__ 1 bits wide
-    |__ arg2: Argument
-        |__ type: OUTPUT
-        |__ name: output
-        |__ 1 bits wide
-|__ statements: StatementListExpression
-    |__ statement0: AssignmentExpression
-        |__ lhs: IdentifierOperand
-            |__ ID(output)
-        |__ rhs: BinOpExpression
-            |__ op: OR
-            |__ lhs: IdentifierOperand
-                |__ ID(a)
-            |__ rhs: IdentifierOperand
-                |__ ID(b)
+{
+  "circuits" : [ {
+    "name" : "basicOrGate",
+    "components" : [ {
+      "name" : "com.ra4king.circuitsim.gui.peers.wiring.PinPeer",
+      "x" : 10,
+      "y" : 10,
+      "properties" : {
+        "Label location" : "WEST",
+        "Label" : "a",
+        "Is input?" : "Yes",
+        "Direction" : "EAST",
+        "Bitsize" : "1"
+      }
+    }, {
+      "name" : "com.ra4king.circuitsim.gui.peers.wiring.PinPeer",
+      "x" : 15,
+      "y" : 15,
+      "properties" : {
+        "Label location" : "WEST",
+        "Label" : "b",
+        "Is input?" : "Yes",
+        "Direction" : "EAST",
+        "Bitsize" : "1"
+      }
+    }, {
+      "name" : "com.ra4king.circuitsim.gui.peers.gates.OrGatePeer",
+      "x" : 20,
+      "y" : 20,
+      "properties" : {
+        "Negate 1" : "No",
+        "Label location" : "NORTH",
+        "Negate 0" : "No",
+        "Number of Inputs" : "2",
+        "Label" : "",
+        "Direction" : "EAST",
+        "Bitsize" : "1"
+      }
+    }, {
+      "name" : "com.ra4king.circuitsim.gui.peers.wiring.PinPeer",
+      "x" : 25,
+      "y" : 25,
+      "properties" : {
+        "Label location" : "EAST",
+        "Label" : "output",
+        "Is input?" : "No",
+        "Direction" : "WEST",
+        "Bitsize" : "1"
+      }
+    } ],
+    "wires" : [ {
+      "x" : 12,
+      "y" : 11,
+      "length" : 10,
+      "isHorizontal" : false
+    }, {
+      "x" : 12,
+      "y" : 21,
+      "length" : 8,
+      "isHorizontal" : true
+    }, {
+      "x" : 17,
+      "y" : 16,
+      "length" : 7,
+      "isHorizontal" : false
+    }, {
+      "x" : 17,
+      "y" : 23,
+      "length" : 3,
+      "isHorizontal" : true
+    }, {
+      "x" : 24,
+      "y" : 22,
+      "length" : 4,
+      "isHorizontal" : false
+    }, {
+      "x" : 24,
+      "y" : 26,
+      "length" : 1,
+      "isHorizontal" : true
+    } ]
+  } ],
+  "version" : "1.9.2b",
+  "globalBitSize" : 1,
+  "clockSpeed" : 1
+}
 ```
 
 ### register.circuit
@@ -197,41 +351,139 @@ A circuit which takes in an input value and a 'set' flag. When the 'set' flag is
 with the input value. The output of the circuit is the current register value.
 
 ```
-CircuitExpression
-|__ name: reg
-|__ args: ArgumentListExpression
-    |__ arg0: Argument
-        |__ type: INPUT
-        |__ name: input
-        |__ 8 bits wide
-    |__ arg1: Argument
-        |__ type: INPUT
-        |__ name: setBit
-        |__ 1 bits wide
-    |__ arg2: Argument
-        |__ type: OUTPUT
-        |__ name: output
-        |__ 8 bits wide
-|__ statements: StatementListExpression
-    |__ statement0: ClockDeclExpression
-        |__ name: clk
-    |__ statement1: RegisterDeclExpression
-        |__ name: r
-        |__ 8 bits wide
-        |__ params: OperandListExpression
-            |__ arg0: IdentifierOperand
-                |__ ID(clk)
-            |__ arg1: IdentifierOperand
-                |__ ID(input)
-            |__ arg2: IdentifierOperand
-                |__ ID(setBit)
-            |__ arg3: NumericalOperand
-                |__ NUM(0)
-    |__ statement2: AssignmentExpression
-        |__ lhs: IdentifierOperand
-            |__ ID(output)
-        |__ rhs: IdentifierOperand
-            |__ ID(r)
+{
+  "circuits" : [ {
+    "name" : "reg",
+    "components" : [ {
+      "name" : "com.ra4king.circuitsim.gui.peers.wiring.PinPeer",
+      "x" : 10,
+      "y" : 10,
+      "properties" : {
+        "Label location" : "WEST",
+        "Label" : "input",
+        "Is input?" : "Yes",
+        "Direction" : "EAST",
+        "Bitsize" : "8"
+      }
+    }, {
+      "name" : "com.ra4king.circuitsim.gui.peers.wiring.PinPeer",
+      "x" : 18,
+      "y" : 18,
+      "properties" : {
+        "Label location" : "WEST",
+        "Label" : "setBit",
+        "Is input?" : "Yes",
+        "Direction" : "EAST",
+        "Bitsize" : "1"
+      }
+    }, {
+      "name" : "com.ra4king.circuitsim.gui.peers.wiring.ClockPeer",
+      "x" : 26,
+      "y" : 26,
+      "properties" : {
+        "Label location" : "NORTH",
+        "Label" : "clk",
+        "Direction" : "EAST"
+      }
+    }, {
+      "name" : "com.ra4king.circuitsim.gui.peers.wiring.ConstantPeer",
+      "x" : 34,
+      "y" : 34,
+      "properties" : {
+        "Label location" : "NORTH",
+        "Label" : "",
+        "Value" : "0",
+        "Direction" : "EAST",
+        "Bitsize" : "1",
+        "Base" : "BINARY"
+      }
+    }, {
+      "name" : "com.ra4king.circuitsim.gui.peers.memory.RegisterPeer",
+      "x" : 42,
+      "y" : 42,
+      "properties" : {
+        "Label location" : "NORTH",
+        "Label" : "r",
+        "Bitsize" : "8"
+      }
+    }, {
+      "name" : "com.ra4king.circuitsim.gui.peers.wiring.PinPeer",
+      "x" : 50,
+      "y" : 50,
+      "properties" : {
+        "Label location" : "EAST",
+        "Label" : "output",
+        "Is input?" : "No",
+        "Direction" : "WEST",
+        "Bitsize" : "8"
+      }
+    } ],
+    "wires" : [ {
+      "x" : 18,
+      "y" : 11,
+      "length" : 33,
+      "isHorizontal" : false
+    }, {
+      "x" : 18,
+      "y" : 44,
+      "length" : 24,
+      "isHorizontal" : true
+    }, {
+      "x" : 20,
+      "y" : 19,
+      "length" : 26,
+      "isHorizontal" : false
+    }, {
+      "x" : 20,
+      "y" : 45,
+      "length" : 22,
+      "isHorizontal" : true
+    }, {
+      "x" : 28,
+      "y" : 27,
+      "length" : 21,
+      "isHorizontal" : false
+    }, {
+      "x" : 28,
+      "y" : 48,
+      "length" : 15,
+      "isHorizontal" : true
+    }, {
+      "x" : 43,
+      "y" : 46,
+      "length" : 2,
+      "isHorizontal" : false
+    }, {
+      "x" : 36,
+      "y" : 35,
+      "length" : 12,
+      "isHorizontal" : false
+    }, {
+      "x" : 36,
+      "y" : 47,
+      "length" : 9,
+      "isHorizontal" : true
+    }, {
+      "x" : 45,
+      "y" : 46,
+      "length" : 1,
+      "isHorizontal" : false
+    }, {
+      "x" : 46,
+      "y" : 44,
+      "length" : 7,
+      "isHorizontal" : false
+    }, {
+      "x" : 46,
+      "y" : 51,
+      "length" : 4,
+      "isHorizontal" : true
+    } ]
+  } ],
+  "version" : "1.9.2b",
+  "globalBitSize" : 1,
+  "clockSpeed" : 1
+}
 ```
 
 ### selector.circuit
@@ -240,34 +492,110 @@ A circuit which implements a binary selector -- it takes in two inputs and a sel
 input to return as the output.
 
 ```
-CircuitExpression
-|__ name: binarySelect
-|__ args: ArgumentListExpression
-    |__ arg0: Argument
-        |__ type: INPUT
-        |__ name: a
-        |__ 4 bits wide
-    |__ arg1: Argument
-        |__ type: INPUT
-        |__ name: b
-        |__ 4 bits wide
-    |__ arg2: Argument
-        |__ type: INPUT
-        |__ name: sel
-        |__ 1 bits wide
-    |__ arg3: Argument
-        |__ type: OUTPUT
-        |__ name: output
-        |__ 4 bits wide
-|__ statements: StatementListExpression
-    |__ statement0: AssignmentExpression
-        |__ lhs: IdentifierOperand
-            |__ ID(output)
-        |__ rhs: TernaryOpExpression
-            |__ condition: IdentifierOperand
-                |__ ID(sel)
-            |__ trueOp: IdentifierOperand
-                |__ ID(a)
-            |__ falseOp: IdentifierOperand
-                |__ ID(b)
+{
+  "circuits" : [ {
+    "name" : "binarySelect",
+    "components" : [ {
+      "name" : "com.ra4king.circuitsim.gui.peers.wiring.PinPeer",
+      "x" : 10,
+      "y" : 10,
+      "properties" : {
+        "Label location" : "WEST",
+        "Label" : "a",
+        "Is input?" : "Yes",
+        "Direction" : "EAST",
+        "Bitsize" : "4"
+      }
+    }, {
+      "name" : "com.ra4king.circuitsim.gui.peers.wiring.PinPeer",
+      "x" : 18,
+      "y" : 18,
+      "properties" : {
+        "Label location" : "WEST",
+        "Label" : "b",
+        "Is input?" : "Yes",
+        "Direction" : "EAST",
+        "Bitsize" : "4"
+      }
+    }, {
+      "name" : "com.ra4king.circuitsim.gui.peers.wiring.PinPeer",
+      "x" : 26,
+      "y" : 26,
+      "properties" : {
+        "Label location" : "WEST",
+        "Label" : "sel",
+        "Is input?" : "Yes",
+        "Direction" : "EAST",
+        "Bitsize" : "1"
+      }
+    }, {
+      "name" : "com.ra4king.circuitsim.gui.peers.plexers.MultiplexerPeer",
+      "x" : 34,
+      "y" : 34,
+      "properties" : {
+        "Selector location" : "Right/Down",
+        "Label location" : "NORTH",
+        "Selector bits" : "1",
+        "Label" : "",
+        "Direction" : "EAST",
+        "Bitsize" : "4"
+      }
+    }, {
+      "name" : "com.ra4king.circuitsim.gui.peers.wiring.PinPeer",
+      "x" : 42,
+      "y" : 42,
+      "properties" : {
+        "Label location" : "EAST",
+        "Label" : "output",
+        "Is input?" : "No",
+        "Direction" : "WEST",
+        "Bitsize" : "4"
+      }
+    } ],
+    "wires" : [ {
+      "x" : 14,
+      "y" : 11,
+      "length" : 25,
+      "isHorizontal" : false
+    }, {
+      "x" : 14,
+      "y" : 36,
+      "length" : 20,
+      "isHorizontal" : true
+    }, {
+      "x" : 22,
+      "y" : 19,
+      "length" : 16,
+      "isHorizontal" : false
+    }, {
+      "x" : 22,
+      "y" : 35,
+      "length" : 12,
+      "isHorizontal" : true
+    }, {
+      "x" : 28,
+      "y" : 27,
+      "length" : 11,
+      "isHorizontal" : false
+    }, {
+      "x" : 28,
+      "y" : 38,
+      "length" : 7,
+      "isHorizontal" : true
+    }, {
+      "x" : 37,
+      "y" : 36,
+      "length" : 7,
+      "isHorizontal" : false
+    }, {
+      "x" : 37,
+      "y" : 43,
+      "length" : 5,
+      "isHorizontal" : true
+    } ]
+  } ],
+  "version" : "1.9.2b",
+  "globalBitSize" : 1,
+  "clockSpeed" : 1
+}
 ```
