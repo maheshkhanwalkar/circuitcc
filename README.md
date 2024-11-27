@@ -285,7 +285,7 @@ inputs as (NOT A) OR (NOT B) which is derived from De Morgan's Law.
 }
 ```
 
-![nand circuit]((https://github.com/maheshkhanwalkar/circuitcc/blob/codegen-dev/images/nand.png?raw=true))
+![nand circuit](https://github.com/maheshkhanwalkar/circuitcc/blob/codegen-dev/images/nand.png?raw=true)
 
 ### orGate.circuit
 
