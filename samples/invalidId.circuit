@@ -1,4 +1,2 @@
-circuit invalid() {
-    // Cannot use keywords as an identifier
-    bits<1> circuit = 1;
+circuit invalid(in bits<1> dup, in bits<4> dup) {
 }

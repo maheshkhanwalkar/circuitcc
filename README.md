@@ -41,8 +41,8 @@ bits<2> out = a or b;
 ```
 
 First, `a` and `b` don't have the same bit width so that's an issue. Any binary operand expression needs to have
-bit-width matching for the left hand and right hand side of the operand (e.g. `a` and `b`). Second, in an assignment
-expression the left-value (lval) and right-value (rval) should have the same bit-width as well (e.g. `out` and `a or b`).
+bit-width matching for the left hand and right hand side of the operand, e.g. `a` and `b`. Second, in an assignment
+expression the left-value (lval) and right-value (rval) should have the same bit-width as well, e.g. `out` and `a or b`.
 
 For constant values (e.g. numerical values), the bit-width calculation is a bit interesting because we do not explicitly
 specify the bit-width. For a constant value, there exists a minimum bit-width needed to represent that value but it is
@@ -101,13 +101,11 @@ The samples/ directory contains 5 sample programs. Here's a description for them
 
 ### invalidId.circuit
 
-Circuit demonstrating the error handling/reporting capability of the compiler. In this example, we try to use a
-keyword as an identifier, which is not allowed. The compiler reports the error and expectation.
+Circuit demonstrating the error handling/reporting due to a semantic error. In this example, we have two variables with
+the same name (`dup`), which is not allowed.
 
 ```
-samples/invalidId.circuit:3:13 error: unexpected token 'circuit', expected: 'identifier'
-    bits<1> circuit = 1;
-            ^~~~~~~
+error. redefinition of 'dup' found
 ```
 
 As described above, the compiler is able to generate a descriptive error message with exact error location and
