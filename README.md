@@ -75,7 +75,7 @@ the components together. To space out the components, we start off in the top-le
 bottom-right corner, which prevents the situation of wires merging together (causing a short-circuit) when connecting
 components together.
 
-The (x, y) position of the component represents the top-level corner of the component itself but
+The (x, y) position of the component represents the top-left corner of the component itself but
 not where the pins are on the component. For each component (input pin, output pin, register, etc.), we translate the
 (x, y) position to the location of the input pin(s) and the output pin and store that in the generated `SimComponent`.
 Wiring is handled by the `WireBuilder` class in `CodeGen.kt` file. Given a source point and a sink point, it computes
@@ -284,6 +284,8 @@ inputs as (NOT A) OR (NOT B) which is derived from De Morgan's Law.
   "clockSpeed" : 1
 }
 ```
+
+![nand circuit]((https://github.com/maheshkhanwalkar/circuitcc/blob/codegen-dev/images/nand.png?raw=true))
 
 ### orGate.circuit
 
