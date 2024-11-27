@@ -308,8 +308,8 @@ A very basic circuit which uses the 'or' key word to create an or gate circuit
       }
     }, {
       "name" : "com.ra4king.circuitsim.gui.peers.wiring.PinPeer",
-      "x" : 15,
-      "y" : 15,
+      "x" : 18,
+      "y" : 18,
       "properties" : {
         "Label location" : "WEST",
         "Label" : "b",
@@ -319,8 +319,8 @@ A very basic circuit which uses the 'or' key word to create an or gate circuit
       }
     }, {
       "name" : "com.ra4king.circuitsim.gui.peers.gates.OrGatePeer",
-      "x" : 20,
-      "y" : 20,
+      "x" : 26,
+      "y" : 26,
       "properties" : {
         "Negate 1" : "No",
         "Label location" : "NORTH",
@@ -332,8 +332,8 @@ A very basic circuit which uses the 'or' key word to create an or gate circuit
       }
     }, {
       "name" : "com.ra4king.circuitsim.gui.peers.wiring.PinPeer",
-      "x" : 25,
-      "y" : 25,
+      "x" : 34,
+      "y" : 34,
       "properties" : {
         "Label location" : "EAST",
         "Label" : "output",
@@ -345,32 +345,32 @@ A very basic circuit which uses the 'or' key word to create an or gate circuit
     "wires" : [ {
       "x" : 12,
       "y" : 11,
-      "length" : 10,
+      "length" : 16,
       "isHorizontal" : false
     }, {
       "x" : 12,
-      "y" : 21,
-      "length" : 8,
+      "y" : 27,
+      "length" : 14,
       "isHorizontal" : true
     }, {
-      "x" : 17,
-      "y" : 16,
+      "x" : 20,
+      "y" : 19,
+      "length" : 10,
+      "isHorizontal" : false
+    }, {
+      "x" : 20,
+      "y" : 29,
+      "length" : 6,
+      "isHorizontal" : true
+    }, {
+      "x" : 30,
+      "y" : 28,
       "length" : 7,
       "isHorizontal" : false
     }, {
-      "x" : 17,
-      "y" : 23,
-      "length" : 3,
-      "isHorizontal" : true
-    }, {
-      "x" : 24,
-      "y" : 22,
+      "x" : 30,
+      "y" : 35,
       "length" : 4,
-      "isHorizontal" : false
-    }, {
-      "x" : 24,
-      "y" : 26,
-      "length" : 1,
       "isHorizontal" : true
     } ]
   } ],
@@ -379,6 +379,8 @@ A very basic circuit which uses the 'or' key word to create an or gate circuit
   "clockSpeed" : 1
 }
 ```
+
+![orGate circuit](https://github.com/maheshkhanwalkar/circuitcc/blob/codegen-dev/images/orGate.png?raw=true)
 
 ### register.circuit
 
@@ -521,6 +523,8 @@ with the input value. The output of the circuit is the current register value.
 }
 ```
 
+![register circuit](https://github.com/maheshkhanwalkar/circuitcc/blob/codegen-dev/images/register.png?raw=true)
+
 ### selector.circuit
 
 A circuit which implements a binary selector -- it takes in two inputs and a selector flag. The flag controls which
@@ -634,3 +638,5 @@ input to return as the output.
   "clockSpeed" : 1
 }
 ```
+
+![selector circuit](https://github.com/maheshkhanwalkar/circuitcc/blob/codegen-dev/images/selector.png?raw=true)
