@@ -14,10 +14,10 @@ then the compilation terminates.
 
 ### Symbol Table implementation
 
-Both the IR and SIM code generation phases rely on a symbol table implemented in `SymbolTable.kt` which keeps track of
-symbols already seen. This allows the traversals to reference previously generated constructs by name. The implementation
-also handles scoping and variable shadowing across scopes -- although for our purposes, this isn't strictly necessary as
-we don't have multiple levels of scoping in the language.
+Both the semantic analysis, IR and SIM code generation phases rely on a symbol table implemented in `SymbolTable.kt`
+which keeps track of symbols already seen. This allows the traversals to reference previously generated constructs by name.
+The implementation also handles scoping and variable shadowing across scopes -- although for our purposes, this isn't
+strictly necessary as we don't have multiple levels of scoping in the language.
 
 ### Semantic Analysis
 
