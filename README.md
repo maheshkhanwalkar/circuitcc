@@ -8,12 +8,47 @@ The code generation phase is implemented in two steps. The input into the code g
 tree (AST) generated from the parsing phase. This AST is traversed to generate an intermediate representation (IR). Then,
 the IR is traversed to generate the .sim language.
 
+Prior to code generation, we run semantic analysis phase which performs semantic validation to ensure the program does
+not have any semantic errors. If that analysis passes, then we proceed with code generation. If there are any failures,
+then the compilation terminates.
+
 ### Symbol Table implementation
 
 Both the IR and SIM code generation phases rely on a symbol table implemented in `SymbolTable.kt` which keeps track of
 symbols already seen. This allows the traversals to reference previously generated constructs by name. The implementation
 also handles scoping and variable shadowing across scopes -- although for our purposes, this isn't strictly necessary as
 we don't have multiple levels of scoping in the language.
+
+### Semantic Analysis
+
+The semantic analysis phase is implemented in `SemanticAnalysis.kt` using the AST visitor pattern. There are two
+analyses performed: duplicate declaration and bit-width equality.
+
+1. Duplicate declaration - check whether there are two or more variables with the same name (not allowed)
+2. Bit-width equality - the bit widths of expressions are matching or can be promoted to match.
+
+Duplicate declaration uses the symbol table to capture identifiers it has already seen. If we see a declaration
+expression and the name already has an entry in the symbol table, then there's a duplicate declaration.
+
+Bit-width equality predominantly ensures that expressions have the same bit-width. For example, the following code
+snippet has multiple bit-width equality issues:
+
+```
+in bits<4> a;
+in bits<8> b;
+...
+bits<2> out = a or b;
+```
+
+First, `a` and `b` don't have the same bit width so that's an issue. Any binary operand expression needs to have
+bit-width matching for the left hand and right hand side of the operand (e.g. `a` and `b`). Second, in an assignment
+expression the left-value (lval) and right-value (rval) should have the same bit-width as well (e.g. `out` and `a or b`).
+
+For constant values (e.g. numerical values), the bit-width calculation is a bit interesting because we do not explicitly
+specify the bit-width. For a constant value, there exists a minimum bit-width needed to represent that value but it is
+not strict -- we can freely increase (**but not decrease**) the bit-width to match its usage in context with expressions
+that have an explicit bit-width. For example `bits<4> a = 3;` while `3` can be represented using just 2 bits, since `a`
+has a fixed width of 4 bits, we would then promote `3` to be 4 bits wide.
 
 ### Intermediate Representation (IR) Generation
 
