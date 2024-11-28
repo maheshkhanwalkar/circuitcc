@@ -101,11 +101,21 @@ The samples/ directory contains 5 sample programs. Here's a description for them
 
 ### invalidId.circuit
 
-Circuit demonstrating the error handling/reporting due to a semantic error. In this example, we have two variables with
-the same name (`dup`), which is not allowed.
+Circuit demonstrating the error handling/reporting due to semantic errors. In this example, we have a bit-width mismatch
+trying to assign `input` to `output` and undefined identifiers `a` and `b` which aren't declared anywhere.
 
 ```
-error. redefinition of 'dup' found
+samples/invalidId.circuit:2:5 error: bit width mismatch: lval=2, rval=1
+    output = input;
+    ^~~~~~
+    output = input;
+             ^~~~~
+samples/invalidId.circuit:3:5 error: undefined identifier: a
+    a = b;
+    ^
+samples/invalidId.circuit:3:9 error: undefined identifier: b
+    a = b;
+        ^
 ```
 
 As described above, the compiler is able to generate a descriptive error message with exact error location and
