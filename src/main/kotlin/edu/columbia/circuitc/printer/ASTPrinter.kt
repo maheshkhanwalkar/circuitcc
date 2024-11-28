@@ -67,7 +67,7 @@ class ASTPrinter : ASTVisitor<Unit> {
         printIndented("lhs: ${assignmentExpression.lVal.javaClass.simpleName}")
 
         indentScope {
-            assignmentExpression.lVal.accept(this)
+            (assignmentExpression.lVal as Expression).accept(this)
         }
 
         printIndented("rhs: ${assignmentExpression.rVal.javaClass.simpleName}")

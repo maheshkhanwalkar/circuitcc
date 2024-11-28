@@ -26,6 +26,7 @@ class Parser(private val printer: PrettyPrinter) {
         )
 
         validateStructure(currTokens, expectedLeftStructure)
+        val startPos = currTokens[0].start
 
         val circuitName = currTokens[1].text
         currTokens.removeAmount(expectedLeftStructure.size)
@@ -38,7 +39,9 @@ class Parser(private val printer: PrettyPrinter) {
         val stmtList = parseStatementList(currTokens)
 
         validateStructure(currTokens, listOf(TokenType.RIGHT_BRACE))
-        return CircuitExpression(circuitName, argList, stmtList)
+        val endPos = currTokens[0].end
+
+        return CircuitExpression(circuitName, argList, stmtList, ExpressionBounds(startPos, endPos))
     }
 
     private fun parseArgList(tokens: MutableList<Token>): ArgListExpression {
@@ -48,15 +51,21 @@ class Parser(private val printer: PrettyPrinter) {
 
         // ARG-LIST -> epsilon
         if (tokens[0].type == TokenType.RIGHT_PAREN) {
-            return ArgListExpression(emptyList())
+            val pos = tokens[0].start
+            val bounds = ExpressionBounds(pos, pos)
+
+            return ArgListExpression(emptyList(), bounds)
         }
 
         // ARG-LIST -> ARG COMMA-ARG-LIST
+        val startPos = tokens[0].start
         val arg = parseArg(tokens)
         val argList = parseCommaArgList(tokens)
 
         val allArgs = mutableListOf(arg) + argList
-        return ArgListExpression(allArgs)
+
+        val endPos = argList.lastOrNull()?.bounds?.end ?: arg.bounds.end
+        return ArgListExpression(allArgs, ExpressionBounds(startPos, endPos))
     }
 
     private fun parseArg(tokens: MutableList<Token>): ArgumentExpression {
@@ -83,14 +92,18 @@ class Parser(private val printer: PrettyPrinter) {
             }
         }
 
+        val startPos = tokens[0].start
+
         tokens.removeAmount(1)
         validateStructure(tokens, expectedStructure)
 
         val bitWidth = tokens[2].text.toInt()
         val name = tokens[4].text
 
+        val endPos = tokens[4].end
+
         tokens.removeAmount(expectedStructure.size)
-        return ArgumentExpression(bitWidth, name, isInput)
+        return ArgumentExpression(bitWidth, name, isInput, ExpressionBounds(startPos, endPos))
     }
 
     private fun parseCommaArgList(tokens: MutableList<Token>): List<ArgumentExpression> {
@@ -122,15 +135,21 @@ class Parser(private val printer: PrettyPrinter) {
 
         // STMT-LIST -> epsilon
         if (tokens[0].type == TokenType.RIGHT_BRACE) {
-            return StatementListExpression(emptyList())
+            val pos = tokens[0].start
+            val bounds = ExpressionBounds(pos, pos)
+
+            return StatementListExpression(emptyList(), bounds)
         }
 
         // STMT-LIST -> STMT SEMI-STMT-LIST
+        val startPos = tokens[0].start
         val arg = parseStatement(tokens)
         val argList = parseSemiStatementList(tokens)
 
+        val endPos = argList.lastOrNull()?.bounds?.end ?: arg.bounds.end
+
         val allArgs = mutableListOf(arg) + argList
-        return StatementListExpression(allArgs)
+        return StatementListExpression(allArgs, ExpressionBounds(startPos, endPos))
     }
 
     private fun parseStatement(tokens: MutableList<Token>): StatementExpression {
@@ -154,8 +173,11 @@ class Parser(private val printer: PrettyPrinter) {
                 val bitWidth = tokens[2].text.toInt()
                 val name = tokens[4].text
 
+                val startPos = tokens[0].start
+                val endPos = tokens[expectedStructure.size - 1].end
+
                 tokens.removeAmount(expectedStructure.size)
-                WireDeclExpression(bitWidth, name)
+                WireDeclExpression(bitWidth, name, ExpressionBounds(startPos, endPos))
             }
 
             // LVAL -> CLOCK ID
@@ -163,10 +185,13 @@ class Parser(private val printer: PrettyPrinter) {
                 val expectedStructure = listOf(TokenType.CLOCK, TokenType.IDENTIFIER)
                 validateStructure(tokens, expectedStructure)
 
+                val startPos = tokens[0].start
+                val endPos = tokens[1].end
+
                 val name = tokens[1].text
                 tokens.removeAmount(expectedStructure.size)
 
-                ClockDeclExpression(name)
+                ClockDeclExpression(name, ExpressionBounds(startPos, endPos))
             }
 
             // LVAL -> REGISTER '<' NUM '>' ID '(' OP-LIST ')'
@@ -177,6 +202,8 @@ class Parser(private val printer: PrettyPrinter) {
                 )
                 validateStructure(tokens, expectedStructure)
 
+                val startPos = tokens[0].start
+
                 val bitWidth = tokens[2].text.toInt()
                 val name = tokens[4].text
 
@@ -184,9 +211,10 @@ class Parser(private val printer: PrettyPrinter) {
                 val opList = parseOperandList(tokens)
 
                 validateStructure(tokens, listOf(TokenType.RIGHT_PAREN))
+                val endPos = tokens[0].end
                 tokens.removeAmount(1)
 
-                RegisterDeclExpression(bitWidth, name, opList)
+                RegisterDeclExpression(bitWidth, name, opList, ExpressionBounds(startPos, endPos))
             }
 
             // LVAL -> ID
@@ -217,7 +245,7 @@ class Parser(private val printer: PrettyPrinter) {
         tokens.removeAmount(1)
 
         val rVal = parseRValExpression(tokens)
-        return AssignmentExpression(lVal, rVal)
+        return AssignmentExpression(lVal, rVal, ExpressionBounds((lVal as Expression).bounds.start, rVal.bounds.end))
     }
 
     private fun parseSemiStatementList(tokens: MutableList<Token>): List<StatementExpression> {
@@ -250,14 +278,19 @@ class Parser(private val printer: PrettyPrinter) {
 
         // OP-LIST -> epsilon
         if (tokens[0].type == TokenType.RIGHT_PAREN) {
-            return OperandListExpression(emptyList())
+            val pos = tokens[0].start
+            val bounds = ExpressionBounds(pos, pos)
+
+            return OperandListExpression(emptyList(), bounds)
         }
 
         // OP-LIST -> OP COMMA-OP-LIST
+        val startPos = tokens[0].start
         val arg = parseOperand(tokens)
         val argList = parseCommaOpList(tokens)
+        val endPos = argList.lastOrNull()?.bounds?.end ?: arg.bounds.end
 
-        return OperandListExpression(listOf(arg) + argList)
+        return OperandListExpression(listOf(arg) + argList, ExpressionBounds(startPos, endPos))
     }
 
     private fun parseOperand(tokens: MutableList<Token>): Operand {
@@ -266,9 +299,10 @@ class Parser(private val printer: PrettyPrinter) {
         }
 
         // OP -> ID | NUM
+        val bounds = ExpressionBounds(tokens[0].start, tokens[0].end)
         val op = when (tokens[0].type) {
-            TokenType.IDENTIFIER -> IdentifierOperand(tokens[0].text)
-            TokenType.NUM -> NumericalOperand(tokens[0].text.toInt())
+            TokenType.IDENTIFIER -> IdentifierOperand(tokens[0].text, bounds)
+            TokenType.NUM -> NumericalOperand(tokens[0].text.toInt(), bounds)
             else -> {
                 unexpectedToken(tokens[0], or(TokenType.IDENTIFIER.text, TokenType.NUM.text))
                 throw Exception() // placate compiler
@@ -306,10 +340,12 @@ class Parser(private val printer: PrettyPrinter) {
         }
 
         if (tokens[0].type == TokenType.NOT) {
+            val startPos = tokens[0].start
+
             // RVAL -> NOT OP
             tokens.removeAmount(1)
             val op = parseOperand(tokens)
-            return UnaryOpExpression(op, UnaryOp.NOT)
+            return UnaryOpExpression(op, UnaryOp.NOT, ExpressionBounds(startPos, op.bounds.end))
         } else {
             val op = parseOperand(tokens)
 
@@ -329,7 +365,7 @@ class Parser(private val printer: PrettyPrinter) {
                 TokenType.AND, TokenType.OR, TokenType.XOR -> {
                     tokens.removeAmount(1)
                     val rhs = parseOperand(tokens)
-                    BinOpExpression(op, rhs, toBinOpType(tokType))
+                    BinOpExpression(op, rhs, toBinOpType(tokType), ExpressionBounds(op.bounds.start, rhs.bounds.end))
                 }
 
                 // RVAL -> OP '?' OP ':' OP
@@ -347,7 +383,7 @@ class Parser(private val printer: PrettyPrinter) {
 
                     tokens.removeAmount(1)
                     val falseOp = parseOperand(tokens)
-                    TernaryOpExpression(op, trueOp, falseOp)
+                    TernaryOpExpression(op, trueOp, falseOp, ExpressionBounds(op.bounds.start, falseOp.bounds.end))
                 }
 
                 else -> {

@@ -1,8 +1,10 @@
 package edu.columbia.circuitc.semantic
 
 import edu.columbia.circuitc.parser.*
+import edu.columbia.circuitc.printer.PrettyPrinter
 import edu.columbia.circuitc.sym.SymbolTable
 import edu.columbia.circuitc.visitor.ASTVisitor
+import kotlin.math.exp
 import kotlin.math.floor
 import kotlin.math.log
 import kotlin.math.max
@@ -23,7 +25,7 @@ private val DummyBitWidth = BitWidth(0, false)
  * Ensure that bit-widths match for assignments and that constant values can be encoded within
  * the specified bit-width that is inferred.
  */
-class BitWidthVerification: ASTVisitor<BitWidth> {
+class BitWidthVerification(private val printer: PrettyPrinter): ASTVisitor<BitWidth> {
     var successful = true
     private set
 
@@ -56,14 +58,19 @@ class BitWidthVerification: ASTVisitor<BitWidth> {
     }
 
     override fun visit(assignmentExpression: AssignmentExpression): BitWidth {
-        val lValWidth = assignmentExpression.lVal.accept(this)
+        val lValWidth = (assignmentExpression.lVal as Expression).accept(this)
         val rValWidth = assignmentExpression.rVal.accept(this)
 
         // Widths need to match or rValWidth is < lValWidth and is adjustable
         if (lValWidth != rValWidth && (!rValWidth.adjustable || rValWidth.width > lValWidth.width)) {
-            println("error. bit-width mismatch")
+            val lVal = assignmentExpression.lVal as Expression
+            val rVal = assignmentExpression.rVal
+
+            printer.printMessage("bit width mismatch: lval=${lValWidth.width}, rval=${rValWidth.width}",
+                lVal.bounds, rVal.bounds)
+
             successful = false
-            return DummyBitWidth
+            return lValWidth
         }
 
         return lValWidth
@@ -98,9 +105,8 @@ class BitWidthVerification: ASTVisitor<BitWidth> {
         val condWidth = ternaryOpExpression.condition.accept(this)
 
         if (condWidth.width != 1) {
-            println("error. ternary condition should be 1-bit wide")
+            printer.printMessage("ternary condition should be 1-bit wide", ternaryOpExpression.condition.bounds)
             successful = false
-            return DummyBitWidth
         }
 
         return binaryWidthComparison(trueOpWidth, falseOpWidth)
@@ -123,7 +129,7 @@ class BitWidthVerification: ASTVisitor<BitWidth> {
             return existing
         }
 
-        println("error: undefined identifier: ${identifierOperand.name}")
+        printer.printMessage("undefined identifier: ${identifierOperand.name}", identifierOperand.bounds)
         successful = false
         return DummyBitWidth
     }
@@ -146,9 +152,8 @@ class BitWidthVerification: ASTVisitor<BitWidth> {
                 return lhsWidth
             }
 
-            println("error. bit-width mismatch")
             successful = false
-            return DummyBitWidth
+            return lhsWidth
         } else {
             return lhsWidth
         }
@@ -161,7 +166,7 @@ class BitWidthVerification: ASTVisitor<BitWidth> {
  * Validate that there are no duplicate declarations of variables within the AST,
  * which is a semantic error.
  */
-class DuplicateDeclarationVerification: ASTVisitor<Unit> {
+class DuplicateDeclarationVerification(private val printer: PrettyPrinter): ASTVisitor<Unit> {
     private val symTable = SymbolTable<Expression>()
 
     var successful = true
@@ -189,7 +194,7 @@ class DuplicateDeclarationVerification: ASTVisitor<Unit> {
     }
 
     override fun visit(assignmentExpression: AssignmentExpression) {
-        assignmentExpression.lVal.accept(this)
+        (assignmentExpression.lVal as Expression).accept(this)
         assignmentExpression.rVal.accept(this)
     }
 
@@ -224,7 +229,7 @@ class DuplicateDeclarationVerification: ASTVisitor<Unit> {
         val existing = symTable.get(name)
 
         if (existing != null) {
-            println("error. redefinition of '$name' found")
+            printer.printMessage("redefinition of '$name' found", expression.bounds, existing.bounds)
             successful = false
             return
         }
@@ -233,14 +238,14 @@ class DuplicateDeclarationVerification: ASTVisitor<Unit> {
     }
 }
 
-fun performSemanticAnalysis(ast: Expression): Boolean {
-    val duplicateDeclarationVerification = DuplicateDeclarationVerification()
+fun performSemanticAnalysis(ast: Expression, printer: PrettyPrinter): Boolean {
+    val duplicateDeclarationVerification = DuplicateDeclarationVerification(printer)
     ast.accept(duplicateDeclarationVerification)
     if (!duplicateDeclarationVerification.successful) {
         return false
     }
 
-    val bitWidthVerification = BitWidthVerification()
+    val bitWidthVerification = BitWidthVerification(printer)
     ast.accept(bitWidthVerification)
     return bitWidthVerification.successful
 }

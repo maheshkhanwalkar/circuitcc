@@ -22,7 +22,7 @@ fun main(args: Array<String>) {
     val parser = Parser(printer)
     val ast = parser.parse(tokens)
 
-    if (!performSemanticAnalysis(ast)) {
+    if (!performSemanticAnalysis(ast, printer)) {
         exitProcess(0)
     }
 

@@ -60,7 +60,7 @@ class IRGen(private val symTable: SymbolTable<IRValue>): ASTVisitor<IRValue> {
     }
 
     override fun visit(assignmentExpression: AssignmentExpression): IRValue {
-        val lVal = assignmentExpression.lVal.accept(this)
+        val lVal = (assignmentExpression.lVal as Expression).accept(this)
         val rVal = assignmentExpression.rVal.accept(this)
 
         if (lVal is InputPinValue) {

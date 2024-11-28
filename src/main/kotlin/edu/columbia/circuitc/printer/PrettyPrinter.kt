@@ -1,14 +1,17 @@
 package edu.columbia.circuitc.printer
 
 import edu.columbia.circuitc.lexer.TokenPos
+import edu.columbia.circuitc.parser.ExpressionBounds
 
 class PrettyPrinter(private val fileName: String, fileContent: String) {
     private val lines: List<String> = fileContent.lines()
 
-    fun printMessage(msg: String, start: TokenPos, end: TokenPos) {
-        print("$fileName:${start.row}:${start.col} ")
-        printColor("error: ", Color.RED, false)
-        println(msg)
+    fun printMessage(msg: String, start: TokenPos, end: TokenPos, noHeader: Boolean = false) {
+        if (!noHeader) {
+            print("$fileName:${start.row}:${start.col} ")
+            printColor("error: ", Color.RED, false)
+            println(msg)
+        }
 
         for (rowPos in (start.row-1)..<end.row) {
             val line = lines[rowPos]
@@ -24,6 +27,14 @@ class PrettyPrinter(private val fileName: String, fileContent: String) {
                 }
             }
         }
+    }
+
+    fun printMessage(msg: String, vararg bounds: ExpressionBounds) {
+        print("$fileName:${bounds[0].start.row}:${bounds[0].start.col} ")
+        printColor("error: ", Color.RED, false)
+        println(msg)
+
+        bounds.forEach { printMessage("", it.start, it.end, true) }
     }
 
     private fun printColor(msg: String, color: Color, newline: Boolean) {
