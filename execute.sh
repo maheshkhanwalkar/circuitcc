@@ -1,14 +1,18 @@
-printf "Lexing invalidId.circuit\n"
+printf "Compiling invalidId.circuit\n"
 java -jar build/libs/circuitcc.jar samples/invalidId.circuit
 
-printf "\nLexing nand.circuit\n"
+printf "\nCompiling nand.circuit\n"
 java -jar build/libs/circuitcc.jar samples/nand.circuit
+cat samples/nand.sim
 
-printf "\nLexing orGate.circuit\n"
+printf "\nCompiling orGate.circuit\n"
 java -jar build/libs/circuitcc.jar samples/orGate.circuit
+cat samples/orGate.sim
 
-printf "\nLexing register.circuit\n"
+printf "\nCompiling register.circuit\n"
 java -jar build/libs/circuitcc.jar samples/register.circuit
+cat samples/register.sim
 
-printf "\nLexing selector.circuit\n"
+printf "\nCompiling selector.circuit\n"
 java -jar build/libs/circuitcc.jar samples/selector.circuit
+cat samples/selector.sim
