@@ -4,7 +4,6 @@ import edu.columbia.circuitc.parser.*
 import edu.columbia.circuitc.printer.PrettyPrinter
 import edu.columbia.circuitc.sym.SymbolTable
 import edu.columbia.circuitc.visitor.ASTVisitor
-import kotlin.math.exp
 import kotlin.math.floor
 import kotlin.math.log
 import kotlin.math.max
@@ -84,6 +83,11 @@ class BitWidthVerification(private val printer: PrettyPrinter): ASTVisitor<BitWi
                 registerDeclExpression.params.bounds)
             successful = false
         } else {
+            if (operands[0] as? IdentifierOperand == null) {
+                printer.printMessage("first parameter should be an identifier", operands[0].bounds)
+                successful = false
+            }
+
             val inputWidth = operands[1].accept(this)
             val (_, succ) = binaryWidthComparison(BitWidth(registerDeclExpression.bitWidth, false), inputWidth)
 
