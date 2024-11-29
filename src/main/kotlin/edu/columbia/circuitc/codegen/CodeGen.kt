@@ -230,8 +230,6 @@ class CodeGen(private val symTable: SymbolTable<SimConstruct>, private val build
         val setBitComponent = registerValue.setBit.accept(this) as SimComponent
         val clearBitComponent = registerValue.clearBit.accept(this) as SimComponent
         val inComponent = registerValue.in0.accept(this) as SimComponent
-
-        // TODO -- need to connect the wiring
         val pos = getPos()
 
         val regComponent = SimComponent(REGISTER_NAME, pos.first, pos.second, mapOf(
