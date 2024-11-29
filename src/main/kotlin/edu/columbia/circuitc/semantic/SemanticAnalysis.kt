@@ -77,6 +77,38 @@ class BitWidthVerification(private val printer: PrettyPrinter): ASTVisitor<BitWi
     }
 
     override fun visit(registerDeclExpression: RegisterDeclExpression): BitWidth {
+        val operands = registerDeclExpression.params.operands
+
+        if (operands.size != 4) {
+            printer.printMessage("incorrect number of operands, expected 4 but got ${operands.size}",
+                registerDeclExpression.params.bounds)
+            successful = false
+        } else {
+            val inputWidth = operands[1].accept(this)
+            val (_, succ) = binaryWidthComparison(BitWidth(registerDeclExpression.bitWidth, false), inputWidth)
+
+            if (!succ) {
+                printer.printMessage("bit width mismatch between register declaration and input: " +
+                        "decl=${registerDeclExpression.bitWidth}, input=${inputWidth.width}",
+                    registerDeclExpression.bounds, operands[1].bounds)
+            }
+
+            val setBitWidth = operands[2].accept(this)
+            val clearBitWidth = operands[3].accept(this)
+
+            if (setBitWidth.width != 1) {
+                printer.printMessage("set-bit should be 1 bit wide, but is actually: ${setBitWidth.width}",
+                    operands[2].bounds)
+                successful = false
+            }
+
+            if (clearBitWidth.width != 1) {
+                printer.printMessage("clear-bit should be 1 bit wide, but is actually: ${clearBitWidth.width}",
+                    operands[3].bounds)
+                successful = false
+            }
+        }
+
         val bitWidth = BitWidth(registerDeclExpression.bitWidth, false)
         symTable.put(registerDeclExpression.name, bitWidth)
         return bitWidth
@@ -96,7 +128,15 @@ class BitWidthVerification(private val printer: PrettyPrinter): ASTVisitor<BitWi
         val lhsWidth = binOpExpression.lhs.accept(this)
         val rhsWidth = binOpExpression.rhs.accept(this)
 
-        return binaryWidthComparison(lhsWidth, rhsWidth)
+        val (width, succ) = binaryWidthComparison(lhsWidth, rhsWidth)
+
+        if (!succ) {
+            printer.printMessage("bit width mismatch between lhs and rhs: lhs=${lhsWidth.width}, rhs=${rhsWidth.width}",
+                binOpExpression.lhs.bounds,
+                binOpExpression.rhs.bounds)
+        }
+
+        return width
     }
 
     override fun visit(ternaryOpExpression: TernaryOpExpression): BitWidth {
@@ -109,7 +149,15 @@ class BitWidthVerification(private val printer: PrettyPrinter): ASTVisitor<BitWi
             successful = false
         }
 
-        return binaryWidthComparison(trueOpWidth, falseOpWidth)
+        val (width, succ) = binaryWidthComparison(trueOpWidth, falseOpWidth)
+
+        if (!succ) {
+            printer.printMessage(
+                "bit-width mismatch between true and false operands: trueOp=${trueOpWidth.width}, falseOp=${falseOpWidth.width}",
+                ternaryOpExpression.trueOp.bounds, ternaryOpExpression.falseOp.bounds)
+        }
+
+        return width
     }
 
     override fun visit(numericalOperand: NumericalOperand): BitWidth {
@@ -138,24 +186,24 @@ class BitWidthVerification(private val printer: PrettyPrinter): ASTVisitor<BitWi
         return DummyBitWidth
     }
 
-    private fun binaryWidthComparison(lhsWidth: BitWidth, rhsWidth: BitWidth): BitWidth {
+    private fun binaryWidthComparison(lhsWidth: BitWidth, rhsWidth: BitWidth): Pair<BitWidth, Boolean> {
         if (lhsWidth != rhsWidth) {
             if (lhsWidth.adjustable && rhsWidth.adjustable) {
-                return BitWidth(max(lhsWidth.width, rhsWidth.width), true)
+                return BitWidth(max(lhsWidth.width, rhsWidth.width), true) to true
             }
 
             if (lhsWidth.adjustable && lhsWidth.width < rhsWidth.width) {
-                return rhsWidth
+                return rhsWidth to true
             }
 
             if (rhsWidth.adjustable && rhsWidth.width < lhsWidth.width) {
-                return lhsWidth
+                return lhsWidth to true
             }
 
             successful = false
-            return lhsWidth
+            return lhsWidth to false
         } else {
-            return lhsWidth
+            return lhsWidth to true
         }
     }
 }
