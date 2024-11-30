@@ -92,8 +92,16 @@ docker build -t circuitcc .
 docker run circuitcc
 ```
 
+## CircuitSim
+
+The generated output (.sim) can be simulated using the CircuitSim software, which can be downloaded from:
+https://www.roiatalla.com/public/CircuitSim/Jar/.
+
+To run the software, `java -jar CircuitSim1.9.2b.jar`, which will launch the UI. From there, it's possible to load in
+the .sim file and play around with the circuit, which is demonstrated in the demo video below.
+
 ## Video Link
-https://www.youtube.com/watch?v=8l0aJVOMzUk
+TBD
 
 ## Sample Programs
 
