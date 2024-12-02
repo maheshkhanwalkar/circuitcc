@@ -6,6 +6,7 @@ import edu.columbia.circuitc.codegen.generateIR
 import edu.columbia.circuitc.codegen.generateSIMCode
 import edu.columbia.circuitc.codegen.sim.SimContainer
 import edu.columbia.circuitc.lexer.Lexer
+import edu.columbia.circuitc.opt.optimizeIR
 import edu.columbia.circuitc.parser.Parser
 import edu.columbia.circuitc.printer.PrettyPrinter
 import edu.columbia.circuitc.semantic.performSemanticAnalysis
@@ -27,7 +28,8 @@ fun main(args: Array<String>) {
     }
 
     val ir = generateIR(ast)
-    val sim = generateSIMCode(ir)
+    val optIR = optimizeIR(ir)
+    val sim = generateSIMCode(optIR)
 
     val outputFile = getOutputFileName(args)
     writeSIMOutput(sim, outputFile)
