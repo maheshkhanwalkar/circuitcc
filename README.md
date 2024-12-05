@@ -380,7 +380,7 @@ inputs as (NOT A) OR (NOT B) which is derived from De Morgan's Law.
 }
 ```
 
-![nand circuit](https://github.com/maheshkhanwalkar/circuitcc/blob/codegen-dev/images/nand.png?raw=true)
+![nand circuit](https://github.com/maheshkhanwalkar/circuitcc/blob/trunk/images/nand.png?raw=true)
 
 ### orGate.circuit
 
@@ -475,7 +475,7 @@ A very basic circuit which uses the 'or' key word to create an or gate circuit
 }
 ```
 
-![orGate circuit](https://github.com/maheshkhanwalkar/circuitcc/blob/codegen-dev/images/orGate.png?raw=true)
+![orGate circuit](https://github.com/maheshkhanwalkar/circuitcc/blob/trunk/images/orGate.png?raw=true)
 
 ### register.circuit
 
@@ -618,7 +618,7 @@ with the input value. The output of the circuit is the current register value.
 }
 ```
 
-![register circuit](https://github.com/maheshkhanwalkar/circuitcc/blob/codegen-dev/images/register.png?raw=true)
+![register circuit](https://github.com/maheshkhanwalkar/circuitcc/blob/trunk/images/register.png?raw=true)
 
 ### selector.circuit
 
@@ -734,4 +734,4 @@ input to return as the output.
 }
 ```
 
-![selector circuit](https://github.com/maheshkhanwalkar/circuitcc/blob/codegen-dev/images/selector.png?raw=true)
+![selector circuit](https://github.com/maheshkhanwalkar/circuitcc/blob/trunk/images/selector.png?raw=true)
