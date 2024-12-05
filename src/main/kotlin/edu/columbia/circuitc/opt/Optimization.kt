@@ -3,7 +3,9 @@ package edu.columbia.circuitc.opt
 import edu.columbia.circuitc.ir.*
 
 fun optimizeIR(ir: IRValue): IRValue {
-    val optIR = deadCodeElimination(ir)
+    var optIR = constantFolding(ir)
+    optIR = deadCodeElimination(optIR)
+
     return optIR
 }
 
@@ -17,4 +19,8 @@ private fun deadCodeElimination(ir: IRValue): IRValue {
     }
 
     return optIR
+}
+
+private fun constantFolding(ir: IRValue): IRValue {
+    return ir.accept(ConstantFolding())
 }

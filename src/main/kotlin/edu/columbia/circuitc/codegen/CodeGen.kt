@@ -321,7 +321,7 @@ class CodeGen(private val symTable: SymbolTable<SimConstruct>, private val build
             "Direction" to "EAST",
             "Bitsize" to constantValue.bitWidth.toString(),
             "Base" to "BINARY"
-        ), listOf(), listOf(WirePoint(pos.first + 2, pos.second + 1, PointOrientation.EAST)))
+        ), listOf(), listOf(WirePoint(pos.first + max(constantValue.bitWidth, 2), pos.second + 1, PointOrientation.EAST)))
 
         constructs.add(constant)
         return constant
