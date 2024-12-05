@@ -1,6 +1,10 @@
 printf "Compiling invalidId.circuit\n"
 java -jar build/libs/circuitcc.jar samples/invalidId.circuit
 
+printf "Compiling deadCode.circuit\n"
+java -jar build/libs/circuitcc.jar samples/deadCode.circuit
+cat samples/deadCode.sim
+
 printf "\nCompiling nand.circuit\n"
 java -jar build/libs/circuitcc.jar samples/nand.circuit
 cat samples/nand.sim

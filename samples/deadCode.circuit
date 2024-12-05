@@ -1,0 +1,4 @@
+circuit dead(in bits<4> a, in bits<4> b, out bits<4> output) {
+    bits<4> tmp = a;
+    output = b;
+}

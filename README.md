@@ -61,9 +61,22 @@ step, then this AndGateValue directly becomes an AND gate.
 The IR generation is implemented in `CodeGen.kt` in the `IRGen` class using the visitor pattern
 over the AST. The IR constructs are defined within `IR.kt` and are much closer to the actual SIM language constructs.
 
+### Optimization
+
+Once the IR is generated, we then perform optimization on the IR. The only optimization performed as of now is dead
+code elimination. The relevant methods are implemented in `Optimization.kt` and `DeadCodeElimination.kt` under the
+`edu.columbia.circuitc.opt` package. 
+
+This optimization is implemented as a pass over the IR using the `IRVisitor` interface. Since dead code elimination can
+lead to additional dead code, we loop through and perform this pass as many times as needed until the IR does not
+change, after which it is returned back and used in the SIM code generation phase.
+
+In future, this optimization phase can be extended to run other optimizations on the IR as well before handing off to
+the code gen step.
+
 ### SIM Code Generation
 
-Once we have the IR generated, we then perform a pass over the IR to generate the SIM code. This is also done using
+Once we have the optimized IR, we then perform a pass over the IR to generate the SIM code. This is also done using
 a visitor pattern, albeit with the `IRVisitor` interface (rather than the `ASTVisitor`). The SIM language constructs
 are defined within `Construct.kt` under the `edu.columbia.circuitc.sim` package. These can be directly serialized into
 JSON output to create the final .sim file.
@@ -133,6 +146,65 @@ samples/invalidId.circuit:3:9 error: undefined identifier: b
 
 As described above, the compiler is able to generate a descriptive error message with exact error location and
 highlighting making it easy for the user to find and correct the error.
+
+### deadCode.circuit
+
+Circuit containing dead code to demonstrate the dead code elimination handling. In this example, there is a
+variable `tmp` which is assigned the value of `a` but otherwise never used. Therefore, this variable is dead and can
+be removed. A side-effect of this is that `a` has no other uses, so it becomes dead as well and also removed.
+
+```
+Eliminating unused declaration: 'tmp'
+Eliminating unused declaration: 'a'
+```
+
+```
+{
+  "circuits" : [ {
+    "name" : "dead",
+    "components" : [ {
+      "name" : "com.ra4king.circuitsim.gui.peers.wiring.PinPeer",
+      "x" : 10,
+      "y" : 10,
+      "properties" : {
+        "Label location" : "WEST",
+        "Label" : "b",
+        "Is input?" : "Yes",
+        "Direction" : "EAST",
+        "Bitsize" : "4"
+      }
+    }, {
+      "name" : "com.ra4king.circuitsim.gui.peers.wiring.PinPeer",
+      "x" : 18,
+      "y" : 18,
+      "properties" : {
+        "Label location" : "EAST",
+        "Label" : "output",
+        "Is input?" : "No",
+        "Direction" : "WEST",
+        "Bitsize" : "4"
+      }
+    } ],
+    "wires" : [ {
+      "x" : 14,
+      "y" : 11,
+      "length" : 8,
+      "isHorizontal" : false
+    }, {
+      "x" : 14,
+      "y" : 19,
+      "length" : 4,
+      "isHorizontal" : true
+    } ]
+  } ],
+  "version" : "1.9.2b",
+  "globalBitSize" : 1,
+  "clockSpeed" : 1
+}
+```
+
+![dead_code circuit](https://github.com/maheshkhanwalkar/circuitcc/blob/trunk/images/deadCode.png?raw=true)
+
 
 ### nand.circuit
 
