@@ -191,7 +191,7 @@ class BitWidthVerification(private val printer: PrettyPrinter): ASTVisitor<BitWi
     }
 
     private fun binaryWidthComparison(lhsWidth: BitWidth, rhsWidth: BitWidth): Pair<BitWidth, Boolean> {
-        if (lhsWidth != rhsWidth) {
+        if (lhsWidth.width != rhsWidth.width) {
             if (lhsWidth.adjustable && rhsWidth.adjustable) {
                 return BitWidth(max(lhsWidth.width, rhsWidth.width), true) to true
             }

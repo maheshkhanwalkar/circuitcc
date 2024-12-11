@@ -3,7 +3,7 @@ package edu.columbia.circuitc.opt
 import edu.columbia.circuitc.ir.*
 
 fun optimizeIR(ir: IRValue): IRValue {
-    val optPasses = arrayOf(::copyPropagation, ::constantFolding, ::deadCodeElimination)
+    val optPasses = arrayOf(::logicGateElimination, ::copyPropagation, ::constantFolding, ::deadCodeElimination)
     var optIR = ir
 
     optPasses.forEach {
@@ -31,4 +31,8 @@ private fun constantFolding(ir: IRValue): IRValue {
 
 private fun copyPropagation(ir: IRValue): IRValue {
     return ir.accept(CopyPropagation())
+}
+
+private fun logicGateElimination(ir: IRValue): IRValue {
+    return ir.accept(LogicGateElimination())
 }
