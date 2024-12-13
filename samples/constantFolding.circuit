@@ -1,0 +1,6 @@
+circuit folding(out bits<4> a, out bits<4> b, out bits<4> c, out bits<4> d) {
+    a = 2 or 3;
+    b = 2 and 1;
+    c = 3 xor 2;
+    d = not 0;
+}

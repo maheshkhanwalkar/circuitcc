@@ -1,4 +1,0 @@
-circuit invalid(in bits<1> input, out bits<2> output) {
-    output = input;
-    a = b;
-}

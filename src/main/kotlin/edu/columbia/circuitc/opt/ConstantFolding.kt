@@ -63,6 +63,7 @@ class ConstantFolding: IRVisitor<IRValue> {
             val inB = andGateValue.inB
 
             val result = inA.value and inB.value
+            println("Folding ${inA.value} and ${inB.value} into $result")
             ConstantValue(inA.bitWidth, result)
         } else {
             andGateValue
@@ -75,6 +76,7 @@ class ConstantFolding: IRVisitor<IRValue> {
             val inB = orGateValue.inB
 
             val result = inA.value or inB.value
+            println("Folding ${inA.value} or ${inB.value} into $result")
             ConstantValue(inA.bitWidth, result)
         } else {
             orGateValue
@@ -87,6 +89,7 @@ class ConstantFolding: IRVisitor<IRValue> {
             val inB = xorGateValue.inB
 
             val result = inA.value xor inB.value
+            println("Folding ${inA.value} xor ${inB.value} into $result")
             ConstantValue(inA.bitWidth, result)
         } else {
             xorGateValue
@@ -98,6 +101,7 @@ class ConstantFolding: IRVisitor<IRValue> {
             val inA = notGateValue.inA
 
             val result = inA.value.inv()
+            println("Folding not ${inA.value} into $result")
             ConstantValue(inA.bitWidth, result)
         } else {
             notGateValue

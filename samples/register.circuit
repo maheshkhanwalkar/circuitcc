@@ -1,6 +1,0 @@
-// Store the 8-bit input into the register if the 'setBit' is enabled, returning the register value into 'output'
-circuit reg(in bits<8> input, in bits<1> setBit, out bits<8> output) {
-    clock clk;
-    register<8> r(clk, input, setBit, 0);
-    output = r;
-}

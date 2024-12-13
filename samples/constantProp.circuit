@@ -1,0 +1,5 @@
+circuit constant(out bits<4> output) {
+    bits<4> a = 5;
+    bits<4> b = 3;
+    output = a and b;
+}

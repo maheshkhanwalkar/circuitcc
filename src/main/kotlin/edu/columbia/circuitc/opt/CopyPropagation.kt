@@ -104,6 +104,7 @@ class CopyPropagation: IRVisitor<IRValue> {
         return if (irValue is TunnelValue) {
             return if (irValue.inValue is TunnelValue || irValue.inValue is InputPinValue || irValue.inValue is ConstantValue) {
                 // b = a; c = b; => c = a
+                println("propagating ${irValue.inValue}")
                 irValue.inValue
             } else {
                 irValue

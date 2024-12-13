@@ -1,7 +1,0 @@
-// Circuit to implement a NAND gate
-circuit nandGate(in bits<1> a, in bits<1> b, out bits<1> output) {
-    // NAND A, B = NOT (AND A, B) = OR (NOT A), (NOT B) by DeMorgan's Law
-    bits<1> na = not a;
-    bits<1> nb = not b;
-    output = na or nb;
-}

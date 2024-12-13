@@ -1,0 +1,5 @@
+circuit gateElim(in bits<4> a, in bits<1> b, out bits<4> one, out bits<1> two, out bits<4> three) {
+    one = a or 0;
+    two = b and 1;
+    three = a and 0;
+}
