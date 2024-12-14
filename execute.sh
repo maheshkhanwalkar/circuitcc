@@ -1,22 +1,19 @@
-printf "Compiling invalidId.circuit\n"
-java -jar build/libs/circuitcc.jar samples/invalidId.circuit
-
 printf "Compiling deadCode.circuit\n"
 java -jar build/libs/circuitcc.jar samples/deadCode.circuit
 cat samples/deadCode.sim
 
-printf "\nCompiling nand.circuit\n"
-java -jar build/libs/circuitcc.jar samples/nand.circuit
-cat samples/nand.sim
+printf "\nCompiling constantFolding.circuit\n"
+java -jar build/libs/circuitcc.jar samples/constantFolding.circuit
+cat samples/constantFolding.sim
 
-printf "\nCompiling orGate.circuit\n"
-java -jar build/libs/circuitcc.jar samples/orGate.circuit
-cat samples/orGate.sim
+printf "\nCompiling constantProp.circuit\n"
+java -jar build/libs/circuitcc.jar samples/constantProp.circuit
+cat samples/constantProp.sim
 
-printf "\nCompiling register.circuit\n"
-java -jar build/libs/circuitcc.jar samples/register.circuit
-cat samples/register.sim
+printf "\nCompiling copyProp.circuit\n"
+java -jar build/libs/circuitcc.jar samples/copyProp.circuit
+cat samples/copyProp.sim
 
-printf "\nCompiling selector.circuit\n"
-java -jar build/libs/circuitcc.jar samples/selector.circuit
-cat samples/selector.sim
+printf "\nCompiling gateElim.circuit\n"
+java -jar build/libs/circuitcc.jar samples/gateElim.circuit
+cat samples/gateElim.sim
