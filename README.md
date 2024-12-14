@@ -118,13 +118,12 @@ The samples/ directory contains 5 sample programs. Here's a description for them
 
 ### deadCode.circuit
 
-Circuit containing dead code to demonstrate the dead code elimination handling. In this example, there is a
-variable `tmp` which is assigned the value of `a` but otherwise never used. Therefore, this variable is dead and can
-be removed. A side-effect of this is that `a` has no other uses, so it becomes dead as well and also removed.
+Circuit containing dead code to demonstrate the dead code elimination handling. In this example, the inputs 'a' and 'b'
+are never used, so they can be eliminated.
 
 ```
-Eliminating unused declaration: 'tmp'
 Eliminating unused declaration: 'a'
+Eliminating unused declaration: 'b'
 ```
 
 ```
@@ -132,15 +131,16 @@ Eliminating unused declaration: 'a'
   "circuits" : [ {
     "name" : "dead",
     "components" : [ {
-      "name" : "com.ra4king.circuitsim.gui.peers.wiring.PinPeer",
+      "name" : "com.ra4king.circuitsim.gui.peers.wiring.ConstantPeer",
       "x" : 10,
       "y" : 10,
       "properties" : {
-        "Label location" : "WEST",
-        "Label" : "b",
-        "Is input?" : "Yes",
+        "Label location" : "NORTH",
+        "Label" : "",
+        "Value" : "2",
         "Direction" : "EAST",
-        "Bitsize" : "4"
+        "Bitsize" : "4",
+        "Base" : "BINARY"
       }
     }, {
       "name" : "com.ra4king.circuitsim.gui.peers.wiring.PinPeer",
